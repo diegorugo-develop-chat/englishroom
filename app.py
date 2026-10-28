@@ -2,6 +2,7 @@ import json
 import gspread
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 from datetime import datetime
 
 # ======================= CONFIGURAÇÕES =======================
@@ -16,7 +17,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# ======================= ESTILOS CSS =======================
+# ======================= ESTILOS CSS GLOBAIS =======================
 st.markdown("""
     <style>
         .stApp {
@@ -76,21 +77,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Script JavaScript global para síntese de voz nativa do navegador
-st.markdown("""
-    <script>
-    function falar(texto) {
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(texto);
-            utterance.lang = 'en-US';
-            utterance.rate = 0.9;
-            window.speechSynthesis.speak(utterance);
-        }
-    }
-    </script>
-""", unsafe_allow_html=True)
-
 # ======================= CONEXÃO COM O GOOGLE SHEETS =======================
 @st.cache_resource
 def conectar_google_sheets():
@@ -136,7 +122,7 @@ def buscar_usuarios():
                 }
         return usuarios_dict
     except Exception as e:
-        st.error(f"Erro ao ler a aba de usuários: {e}")
+        st.error(f"Erro ao ler a aba de utilizadores: {e}")
         return {}
 
 @st.cache_data(ttl=60)
@@ -392,42 +378,91 @@ elif pagina == "verbs":
             pat = str(verb.get("pattern", ""))
 
             card_html = f"""
-            <div style="background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 16px; border: 1px solid #eaeaea;">
-                <span style="background-color: #fdf2f8; color: #db2777; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; float: right;">{pat}</span>
-                
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h3 style="margin:0; color:#1e293b;">{inf}</h3>
-                    <button style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 6px; background-color: transparent; border: 1px solid #e2e8f0; cursor: pointer; color: #4f67e8;" onclick="falar('{inf}')" title="Ouvir pronúncia: {inf}">{icon_svg}</button>
-                </div>
-                
-                <p style="color:#64748b; font-size:13px; margin:2px 0 0 0;">{fon}</p>
-                <hr style="margin:10px 0; border-top:1px solid #f1f5f9;">
-                
-                <div style="display:flex; justify-content:space-between; font-size:13px; gap: 10px;">
-                    <div>
-                        <b>Past Simple:</b><br>
-                        <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
-                            <span style="color:#4f67e8; font-weight:600;">{past}</span>
-                            <button style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 6px; background-color: transparent; border: 1px solid #e2e8f0; cursor: pointer; color: #4f67e8;" onclick="falar('{past}')" title="Ouvir pronúncia: {past}">{icon_svg}</button>
-                        </div>
-                        <span style="color:#94a3b8; font-size:11px;">{past_fon}</span>
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <style>
+                    body {{
+                        font-family: 'Inter', sans-serif;
+                        margin: 0;
+                        padding: 2px;
+                        background-color: transparent;
+                    }}
+                    .verb-card {{
+                        background: white;
+                        border-radius: 16px;
+                        padding: 20px;
+                        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+                        border: 1px solid #eaeaea;
+                        box-sizing: border-box;
+                    }}
+                    .audio-action-btn {{
+                        display: inline-flex;
+                        align-items: center;
+                        justify-content: center;
+                        border-radius: 6px;
+                        background-color: transparent;
+                        border: 1px solid #e2e8f0;
+                        cursor: pointer;
+                        color: #4f67e8;
+                        transition: background 0.2s;
+                    }}
+                    .audio-action-btn:hover {{
+                        background-color: #f1f5f9;
+                    }}
+                </style>
+                <script>
+                function falar(texto) {{
+                    if ('speechSynthesis' in window) {{
+                        window.speechSynthesis.cancel();
+                        const utterance = new SpeechSynthesisUtterance(texto);
+                        utterance.lang = 'en-US';
+                        utterance.rate = 0.9;
+                        window.speechSynthesis.speak(utterance);
+                    }}
+                }}
+                </script>
+            </head>
+            <body>
+                <div class="verb-card">
+                    <span style="background-color: #fdf2f8; color: #db2777; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; float: right;">{pat}</span>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="margin:0; color:#1e293b; font-size: 20px;">{inf}</h3>
+                        <button class="audio-action-btn" style="width: 32px; height: 32px;" onclick="falar('{inf}')" title="Ouvir pronúncia: {inf}">{icon_svg}</button>
                     </div>
-                    <div>
-                        <b>Past Participle:</b><br>
-                        <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
-                            <span style="color:#4f67e8; font-weight:600;">{part}</span>
-                            <button style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 6px; background-color: transparent; border: 1px solid #e2e8f0; cursor: pointer; color: #4f67e8;" onclick="falar('{part}')" title="Ouvir pronúncia: {part}">{icon_svg}</button>
+                    
+                    <p style="color:#64748b; font-size:13px; margin:2px 0 0 0;">{fon}</p>
+                    <hr style="margin:10px 0; border-top:1px solid #f1f5f9;">
+                    
+                    <div style="display:flex; justify-content:space-between; font-size:13px; gap: 10px;">
+                        <div>
+                            <b>Past Simple:</b><br>
+                            <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
+                                <span style="color:#4f67e8; font-weight:600;">{past}</span>
+                                <button class="audio-action-btn" style="width: 26px; height: 26px;" onclick="falar('{past}')" title="Ouvir pronúncia: {past}">{icon_svg}</button>
+                            </div>
+                            <span style="color:#94a3b8; font-size:11px;">{past_fon}</span>
                         </div>
-                        <span style="color:#94a3b8; font-size:11px;">{part_fon}</span>
+                        <div>
+                            <b>Past Participle:</b><br>
+                            <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
+                                <span style="color:#4f67e8; font-weight:600;">{part}</span>
+                                <button class="audio-action-btn" style="width: 26px; height: 26px;" onclick="falar('{part}')" title="Ouvir pronúncia: {part}">{icon_svg}</button>
+                            </div>
+                            <span style="color:#94a3b8; font-size:11px;">{part_fon}</span>
+                        </div>
                     </div>
+                    
+                    <p style="margin:12px 0 4px 0; font-size:13px;"><b>Tradução:</b> {trans}</p>
+                    <p style="margin:0; font-size:12px; color:#64748b; font-style:italic;">Exemplo: {ex}</p>
                 </div>
-                
-                <p style="margin:12px 0 4px 0; font-size:13px;"><b>Tradução:</b> {trans}</p>
-                <p style="margin:0; font-size:12px; color:#64748b; font-style:italic;">Exemplo: {ex}</p>
-            </div>
+            </body>
+            </html>
             """
             with cols[i % 3]:
-                st.markdown(card_html, unsafe_allow_html=True)
+                components.html(card_html, height=230, scrolling=False)
     else:
         st.info("Nenhum verbo encontrado com os filtros selecionados.")
 
