@@ -66,13 +66,12 @@ st.markdown("""
             text-align: center;
             border-top: 4px solid #4f67e8;
         }
-        .verb-card {
+        .content-card {
             background: white;
             border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            padding: 22px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.04);
             margin-bottom: 16px;
-            border: 1px solid #eaeaea;
         }
         .tag-badge {
             background-color: #fdf2f8;
@@ -136,7 +135,6 @@ def buscar_usuarios():
 
 @st.cache_data(ttl=60)
 def carregar_verbos_irregulares():
-    """Lê todos os 144 verbos cadastrados na aba 'verbos_irregulares' do Google Sheets."""
     sh = conectar_google_sheets()
     if not sh:
         return []
@@ -324,17 +322,17 @@ elif pagina == "skills":
         st.markdown('<div class="content-card"><h4>📖 Módulo Iniciante (Nível A1)</h4><p>Conteúdos básicos liberados para o seu aprendizado.</p></div>', unsafe_allow_html=True)
     if st.session_state.niveis.get("A2") == "SIM":
         st.markdown('<div class="content-card"><h4>📖 Módulo Elementar (Nível A2)</h4><p>Estruturas e vocabulário intermediário inicial.</p></div>', unsafe_allow_html=True)
+    if st.session_state.niveis.get("B1") == "SIM":
+        st.markdown('<div class="content-card"><h4>📖 Módulo Intermediário (Nível B1)</h4><p>Conversação fluida e gramática.</p></div>', unsafe_allow_html=True)
 
 elif pagina == "verbs":
     st.title("Irregular Verbs")
     st.caption("Lista completa de 144 verbos irregulares organizados por padrões de transformação")
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Carrega os 144 verbos direto do Google Sheets
     verbos_lista = carregar_verbos_irregulares()
     total_verbos = len(verbos_lista)
 
-    # 4 Cards Superiores
     col_v1, col_v2, col_v3, col_v4 = st.columns(4)
     with col_v1:
         st.markdown(f'<div class="metric-card"><h3>{total_verbos}</h3><p style="color: #6b7a90; margin:0;">Total de Verbos</p></div>', unsafe_allow_html=True)
@@ -347,10 +345,8 @@ elif pagina == "verbs":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Extrai dinamicamente todos os padrões disponíveis na planilha
     padroes_disponiveis = ["Todos os padrões"] + sorted(list({str(v.get("pattern", "")).strip() for v in verbos_lista if v.get("pattern")}))
 
-    # Área de Filtros
     with st.container():
         st.markdown("### Filtros")
         st.caption("Filtre verbos por padrão ou busque por texto")
@@ -362,7 +358,6 @@ elif pagina == "verbs":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Lógica de Filtro
     verbos_filtrados = verbos_lista
     if filtro_padrao != "Todos os padrões":
         verbos_filtrados = [v for v in verbos_filtrados if str(v.get("pattern", "")).strip() == filtro_padrao]
@@ -375,25 +370,51 @@ elif pagina == "verbs":
             or bt in str(v.get("translation", "")).lower()
         ]
 
-    # Exibição dos Cards (3 colunas)
     if verbos_filtrados:
         cols = st.columns(3)
         for i, verb in enumerate(verbos_filtrados):
-            with cols[i % 3]:
-                st.markdown(f"""
-                    <div class="verb-card">
-                        <span class="tag-badge">{verb.get("pattern", "")}</span>
-                        <h3 style="margin:0; color:#1e293b;">{verb.get("infinitive", "")} 🔊</h3>
-                        <p style="color:#64748b; font-size:13px;">{verb.get("phonetic", "")}</p>
-                        <hr style="margin:10px 0; border-top:1px solid #f1f5f9;">
-                        <div style="display:flex; justify-content:space-between; font-size:13px;">
-                            <div><b>Past Simple:</b><br>{verb.get("past", "")} 🔊<br><span style="color:#94a3b8; font-size:11px;">{verb.get("past_phonetic", "")}</span></div>
-                            <div><b>Past Participle:</b><br>{verb.get("participle", "")} 🔊<br><span style="color:#94a3b8; font-size:11px;">{verb.get("part_phonetic", "")}</span></div>
-                        </div>
-                        <p style="margin:12px 0 4px 0; font-size:13px;"><b>Tradução:</b> {verb.get("translation", "")}</p>
-                        <p style="margin:0; font-size:12px; color:#64748b; font-style:italic;">Exemplo: {verb.get("example", "")}</p>
+            inf = verb.get("infinitive", "")
+            fon = verb.get("phonetic", "")
+            past = verb.get("past", "")
+            past_fon = verb.get("past_phonetic", "")
+            part = verb.get("participle", "")
+            part_fon = verb.get("part_phonetic", "")
+            trans = verb.get("translation", "")
+            ex = verb.get("example", "")
+            pat = verb.get("pattern", "")
+
+            card_html = f"""
+            <div style="background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 16px; border: 1px solid #eaeaea;">
+                <span style="background-color: #fdf2f8; color: #db2777; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; float: right;">{pat}</span>
+                <h3 style="margin:0; color:#1e293b; cursor:pointer;" onclick="falar('{inf}')">{inf} <span style="font-size:16px;">🔊</span></h3>
+                <p style="color:#64748b; font-size:13px; margin:2px 0 0 0;">{fon}</p>
+                <hr style="margin:10px 0; border-top:1px solid #f1f5f9;">
+                <div style="display:flex; justify-content:space-between; font-size:13px;">
+                    <div>
+                        <b>Past Simple:</b><br>
+                        <span style="cursor:pointer; color:#4f67e8;" onclick="falar('{past}')">{past} 🔊</span><br>
+                        <span style="color:#94a3b8; font-size:11px;">{past_fon}</span>
                     </div>
-                """, unsafe_allow_html=True)
+                    <div>
+                        <b>Past Participle:</b><br>
+                        <span style="cursor:pointer; color:#4f67e8;" onclick="falar('{part}')">{part} 🔊</span><br>
+                        <span style="color:#94a3b8; font-size:11px;">{part_fon}</span>
+                    </div>
+                </div>
+                <p style="margin:12px 0 4px 0; font-size:13px;"><b>Tradução:</b> {trans}</p>
+                <p style="margin:0; font-size:12px; color:#64748b; font-style:italic;">Exemplo: {ex}</p>
+            </div>
+            
+            <script>
+            function falar(texto) {{
+                const utterance = new SpeechSynthesisUtterance(texto);
+                utterance.lang = 'en-US';
+                window.speechSynthesis.speak(utterance);
+            }}
+            </script>
+            """
+            with cols[i % 3]:
+                st.markdown(card_html, unsafe_allow_html=True)
     else:
         st.info("Nenhum verbo encontrado com os filtros selecionados.")
 
