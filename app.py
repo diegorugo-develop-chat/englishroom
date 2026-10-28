@@ -453,5 +453,3 @@ elif pagina == "verbs":
 elif pagina == "practice":
     st.title("💬 Prática com Inteligência Artificial")
     st.info("Inicie conversas e simulações para treinar conversação e escrita de acordo com o seu nível.")
-
-```
