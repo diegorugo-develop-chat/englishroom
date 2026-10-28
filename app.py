@@ -143,6 +143,30 @@ st.markdown("""
             color: #16a34a;
             font-weight: 700;
         }
+        
+        /* Estilos dos Cards de Exercícios Inspirados no Duolingo/YouResilient */
+        .ex-card-correct {
+            background-color: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 14px;
+        }
+        .ex-card-wrong {
+            background-color: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 14px;
+        }
+        .ex-card-neutral {
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 14px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        }
     </style>
 """, unsafe_allow_html=True)
 
@@ -475,7 +499,7 @@ elif pagina == "skills":
         }
     }
 
-    # ================= VISUALIZAÇÃO COMPLETA DO TÓPICO / LIÇÃO =================
+    # ================= VISUALIZAÇÃO DA LIÇÃO / TÓPICO COM EXERCÍCIOS INTERATIVOS =================
     if st.session_state.get("topico_selecionado"):
         topico = st.session_state.topico_selecionado
         
@@ -489,7 +513,6 @@ elif pagina == "skills":
         st.markdown(f'<h1 class="topic-title">{topico}</h1>', unsafe_allow_html=True)
         st.markdown('<div class="topic-subtitle">O verbo que significa <b>ser</b> e <b>estar</b> ao mesmo tempo.</div>', unsafe_allow_html=True)
 
-        # Botões de Navegação Rápida
         st.markdown("""
             <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px;">
                 <span style="background:#f1f5f9; padding: 6px 14px; border-radius: 20px; font-size:13px; font-weight:600; color:#475569;">A ideia</span>
@@ -501,7 +524,7 @@ elif pagina == "skills":
             </div>
         """, unsafe_allow_html=True)
 
-        # --- SEÇÃO: A IDEIA ---
+        # A IDEIA
         st.markdown('<div class="section-tag">A IDEIA</div>', unsafe_allow_html=True)
         st.markdown("""
             <div class="info-box-light">
@@ -511,33 +534,20 @@ elif pagina == "skills":
             </div>
         """, unsafe_allow_html=True)
 
-        # --- SEÇÃO: ESTRUTURA ---
+        # ESTRUTURA
         st.markdown('<div class="section-tag">ESTRUTURA</div>', unsafe_allow_html=True)
         st.markdown("""
             <div class="info-box-light">
-                <div class="struct-row">
-                    <span class="struct-symbol">+</span>
-                    <span>I <b>am</b> (I'm) &nbsp;·&nbsp; he/she/it <b>is</b> (she's) &nbsp;·&nbsp; you/we/they <b>are</b> (we're)</span>
-                </div>
-                <div class="struct-row">
-                    <span class="struct-symbol">-</span>
-                    <span>I'm <b>not</b> &nbsp;·&nbsp; she <b>isn't</b> &nbsp;·&nbsp; they <b>aren't</b></span>
-                </div>
-                <div class="struct-row">
-                    <span class="struct-symbol">?</span>
-                    <span><b>Am</b> I...? &nbsp;·&nbsp; <b>Is</b> he...? &nbsp;·&nbsp; <b>Are</b> you...?</span>
-                </div>
-                <div class="struct-row">
-                    <span class="struct-symbol">✓</span>
-                    <span>Respostas curtas: Yes, I <b>am</b>. / No, she <b>isn't</b>.</span>
-                </div>
+                <div class="struct-row"><span class="struct-symbol">+</span><span>I <b>am</b> (I'm) &nbsp;·&nbsp; he/she/it <b>is</b> (she's) &nbsp;·&nbsp; you/we/they <b>are</b> (we're)</span></div>
+                <div class="struct-row"><span class="struct-symbol">-</span><span>I'm <b>not</b> &nbsp;·&nbsp; she <b>isn't</b> &nbsp;·&nbsp; they <b>aren't</b></span></div>
+                <div class="struct-row"><span class="struct-symbol">?</span><span><b>Am</b> I...? &nbsp;·&nbsp; <b>Is</b> he...? &nbsp;·&nbsp; <b>Are</b> you...?</span></div>
+                <div class="struct-row"><span class="struct-symbol">✓</span><span>Respostas curtas: Yes, I <b>am</b>. / No, she <b>isn't</b>.</span></div>
             </div>
         """, unsafe_allow_html=True)
 
-        # --- SEÇÃO: EXEMPLOS ---
+        # EXEMPLOS
         st.markdown('<div class="section-tag">EXEMPLOS</div>', unsafe_allow_html=True)
         st.caption("Toque na frase para ver a tradução")
-        
         ex1, ex2 = st.columns(2)
         with ex1:
             st.info("I **am** 14 years old.  \n*(Eu tenho 14 anos de idade.)*")
@@ -546,56 +556,137 @@ elif pagina == "skills":
             st.info("My best friend **is** from Curitiba.  \n*(O meu melhor amigo é de Curitiba.)*")
             st.info("**Is** your mom a teacher? – Yes, she **is**.  \n*(A tua mãe é professora? – Sim, é.)*")
 
-        # --- SEÇÃO: DICAS & ERROS COMUNS ---
+        # DICAS E ERROS COMUNS
         col_dicas, col_erros = st.columns(2)
         with col_dicas:
             st.markdown('<div class="section-tag">DICAS</div>', unsafe_allow_html=True)
             st.markdown("""
                 <div class="tip-card-green">
-                    <b>Idade é com BE</b><br>
-                    Em inglês, você <i>é</i> a sua idade: <i>I'm 15</i>. Nunca <i>I have 15</i>.
-                    <br><br>
-                    <b>Sentimentos também</b><br>
-                    Fome, sede, frio e medo usam <i>be</i>: <i>I'm hungry, I'm cold, I'm afraid</i>.
+                    <b>Idade é com BE</b><br>Em inglês, você <i>é</i> a sua idade: <i>I'm 15</i>. Nunca <i>I have 15</i>.
+                    <br><br><b>Sentimentos também</b><br>Fome, sede, frio e medo usam <i>be</i>: <i>I'm hungry, I'm cold</i>.
                 </div>
             """, unsafe_allow_html=True)
-            
         with col_erros:
             st.markdown('<div class="section-tag">ERROS COMUNS</div>', unsafe_allow_html=True)
             st.markdown("""
                 <div class="error-card">
-                    <span class="err-wrong">I have 13 years.</span><br>
-                    <span class="err-correct">I am 13 years old.</span><br>
-                    <small style="color:#64748b;">Idade usa be, não have.</small>
+                    <span class="err-wrong">I have 13 years.</span><br><span class="err-correct">I am 13 years old.</span><br><small style="color:#64748b;">Idade usa be, não have.</small>
                     <hr style="margin: 8px 0; border-top:1px solid #f1f5f9;">
-                    <span class="err-wrong">She are my sister.</span><br>
-                    <span class="err-correct">She is my sister.</span><br>
-                    <small style="color:#64748b;">Com he/she/it, use sempre is.</small>
+                    <span class="err-wrong">She are my sister.</span><br><span class="err-correct">She is my sister.</span><br><small style="color:#64748b;">Com he/she/it, use sempre is.</small>
                 </div>
             """, unsafe_allow_html=True)
 
-        # --- SEÇÃO: PRATIQUE (EXERCÍCIOS) ---
+        # ================= SEÇÃO PRATIQUE (COM ERROS E ACERTOS INTERATIVOS) =================
         st.markdown('<div class="section-tag">PRATIQUE</div>', unsafe_allow_html=True)
         st.markdown("### Exercícios Interativos")
-        st.caption("Escolha a opção certa ou escreva a resposta. Cada acerto acumula pontos na sua conta!")
+        st.caption("Escolha a opção certa ou escreva a resposta. Cada tentativa confere feedback imediato!")
 
-        q1 = st.radio("1. My friends ___ very funny.", ["is", "am", "are"], key="q1_v2")
-        q2 = st.radio("2. ___ you hungry?", ["Is", "Are", "Am"], key="q2_v2")
-        q3 = st.radio("3. How old are you? – I ___ 15.", ["have", "am", "is"], key="q3_v2")
+        # Controlo de submissão no session state para cada questão
+        if "respostas_submetidas" not in st.session_state:
+            st.session_state.respostas_submetidas = {}
 
-        if st.button("Conferir Respostas dos Exercícios 🚀"):
-            acertos = 0
-            if q1 == "are": acertos += 1
-            if q2 == "Are": acertos += 1
-            if q3 == "am": acertos += 1
+        # Barra de progresso visual de acertos
+        acertos_atuais = sum(1 for k, v in st.session_state.respostas_submetidas.items() if v == "correto")
+        st.markdown(f"**{acertos_atuais} / 5 acertos**")
+        st.progress(acertos_atuais / 5)
+        st.markdown("<br>", unsafe_allow_html=True)
 
-            if acertos == 3:
-                st.success("🎉 Excelente! Acertou 3/3 questões! Ganhou +30 XP e +10 Gems!")
-                atualizar_progresso_no_sheets(st.session_state.usuario, xp_add=30, gems_add=10)
-            else:
-                st.warning(f"Acertou {acertos}/3 questões. Reveja as respostas acima e tente novamente!")
+        # --- QUESTÃO 1 ---
+        status_q1 = st.session_state.respostas_submetidas.get("q1", None)
+        if status_q1 == "correto":
+            st.markdown('<div class="ex-card-correct">1. My friends ___ very funny.<br><b>Resposta escolhida: are</b><br>✅ <b>Isso!</b> <i>My friends</i> = they → are.</div>', unsafe_allow_html=True)
+        elif status_q1 == "errado":
+            st.markdown('<div class="ex-card-wrong">1. My friends ___ very funny.<br>❌ <b>Quase.</b> A resposta certa é <b>are</b>. <i>My friends</i> = they → are.</div>', unsafe_allow_html=True)
+        else:
+            st.markdown('<div class="ex-card-neutral">1. My friends ___ very funny.</div>', unsafe_allow_html=True)
+            r1 = st.radio("Escolha a opção para a Q1:", ["is", "am", "are"], key="input_q1", label_visibility="collapsed")
+            if st.button("Conferir Q1"):
+                if r1 == "are":
+                    st.session_state.respostas_submetidas["q1"] = "correto"
+                    atualizar_progresso_no_sheets(st.session_state.usuario, xp_add=10, gems_add=2)
+                else:
+                    st.session_state.respostas_submetidas["q1"] = "errado"
+                st.rerun()
 
-    # ================= LISTA DA TRILHA DE APRENDIZADO (CARDS) =================
+        # --- QUESTÃO 2 ---
+        status_q2 = st.session_state.respostas_submetidas.get("q2", None)
+        if status_q2 == "correto":
+            st.markdown('<div class="ex-card-correct">2. ___ you hungry?<br><b>Resposta escolhida: Are</b><br>✅ <b>Isso!</b> Pergunta com <i>you</i> → Are.</div>', unsafe_allow_html=True)
+        elif status_q2 == "errado":
+            st.markdown('<div class="ex-card-wrong">2. ___ you hungry?<br>❌ <b>Incorreto.</b> A resposta certa é <b>Are</b>.</div>', unsafe_allow_html=True)
+        else:
+            st.markdown('<div class="ex-card-neutral">2. ___ you hungry?</div>', unsafe_allow_html=True)
+            r2 = st.radio("Escolha a opção para a Q2:", ["Is", "Are", "Am"], key="input_q2", label_visibility="collapsed")
+            if st.button("Conferir Q2"):
+                if r2 == "Are":
+                    st.session_state.respostas_submetidas["q2"] = "correto"
+                    atualizar_progresso_no_sheets(st.session_state.usuario, xp_add=10, gems_add=2)
+                else:
+                    st.session_state.respostas_submetidas["q2"] = "errado"
+                st.rerun()
+
+        # --- QUESTÃO 3 ---
+        status_q3 = st.session_state.respostas_submetidas.get("q3", None)
+        if status_q3 == "correto":
+            st.markdown('<div class="ex-card-correct">3. How old are you? – I ___ 15.<br><b>Resposta escolhida: am</b><br>✅ <b>Isso!</b> Idade usa be: I am 15.</div>', unsafe_allow_html=True)
+        elif status_q3 == "errado":
+            st.markdown('<div class="ex-card-wrong">3. How old are you? – I ___ 15.<br>❌ <b>Ainda não.</b> Lembre-se que idade em inglês usa o verbo <i>to be</i> (am).</div>', unsafe_allow_html=True)
+        else:
+            st.markdown('<div class="ex-card-neutral">3. How old are you? – I ___ 15.</div>', unsafe_allow_html=True)
+            r3 = st.radio("Escolha a opção para a Q3:", ["have", "am", "is"], key="input_q3", label_visibility="collapsed")
+            if st.button("Conferir Q3"):
+                if r3 == "am":
+                    st.session_state.respostas_submetidas["q3"] = "correto"
+                    atualizar_progresso_no_sheets(st.session_state.usuario, xp_add=10, gems_add=2)
+                else:
+                    st.session_state.respostas_submetidas["q3"] = "errado"
+                st.rerun()
+
+        # --- QUESTÃO 4 (Preenchimento / Input) ---
+        status_q4 = st.session_state.respostas_submetidas.get("q4", None)
+        if status_q4 == "correto":
+            st.markdown('<div class="ex-card-correct">4. Lucas <b>is</b> (be) my cousin.<br>✅ <b>Correto!</b> He → is.</div>', unsafe_allow_html=True)
+        elif status_q4 == "errado":
+            st.markdown('<div class="ex-card-wrong">4. Lucas _________ (be) my cousin.<br>❌ <b>Incorreto.</b> A resposta correta era <b>is</b>.</div>', unsafe_allow_html=True)
+        else:
+            st.markdown('<div class="ex-card-neutral">4. Lucas _______________ (be) my cousin.</div>', unsafe_allow_html=True)
+            txt_q4 = st.text_input("Digite a sua resposta para a Q4 (ex: is, am, are):", key="txt_q4")
+            c_col1, c_col2 = st.columns(2)
+            with c_col1:
+                if st.button("Conferir Q4"):
+                    if txt_q4.strip().lower() == "is":
+                        st.session_state.respostas_submetidas["q4"] = "correto"
+                        atualizar_progresso_no_sheets(st.session_state.usuario, xp_add=10, gems_add=2)
+                    else:
+                        st.session_state.respostas_submetidas["q4"] = "errado"
+                    st.rerun()
+            with c_col2:
+                if st.button("Ver resposta Q4"):
+                    st.info("Resposta correta: **is**")
+
+        # --- QUESTÃO 5 (Preenchimento / Input) ---
+        status_q5 = st.session_state.respostas_submetidas.get("q5", None)
+        if status_q5 == "correto":
+            st.markdown('<div class="ex-card-correct">5. I <b>am not</b> (not / be) from São Paulo.<br>✅ <b>Correto!</b></div>', unsafe_allow_html=True)
+        elif status_q5 == "errado":
+            st.markdown('<div class="ex-card-wrong">5. I _________ (not / be) from São Paulo.<br>❌ <b>Ainda não.</b> A resposta correta era <b>am not</b>.</div>', unsafe_allow_html=True)
+        else:
+            st.markdown('<div class="ex-card-neutral">5. I _______________ (not / be) from São Paulo.</div>', unsafe_allow_html=True)
+            txt_q5 = st.text_input("Digite a sua resposta para a Q5 (ex: am not, aren't):", key="txt_q5")
+            c_col1, c_col2 = st.columns(2)
+            with c_col1:
+                if st.button("Conferir Q5"):
+                    if txt_q5.strip().lower() in ["am not", "im not", "i'm not"]:
+                        st.session_state.respostas_submetidas["q5"] = "correto"
+                        atualizar_progresso_no_sheets(st.session_state.usuario, xp_add=10, gems_add=2)
+                    else:
+                        st.session_state.respostas_submetidas["q5"] = "errado"
+                    st.rerun()
+            with c_col2:
+                if st.button("Ver resposta Q5"):
+                    st.info("Resposta correta: **am not** (ou **I'm not**)")
+
+    # ================= LISTA DA TRILHA DE APRENDIZADO =================
     else:
         st.title("🚀 Skills & Trilha de Aprendizado")
         st.caption("Selecione qualquer tópico abaixo para abrir a lição completa, explicações e exercícios.")
