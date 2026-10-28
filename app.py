@@ -300,4 +300,131 @@ if pagina == "dashboard":
 
     c1, c2, c3, c4 = st.columns(4)
     with c1:
-        st.markdown(f'<div class="metric-card"><h3>{dados_progresso["xp"]}</h3><p style="color: #6b7a90; margin:0;">Points / XP</p></div>', unsafe_
+        st.markdown(f'<div class="metric-card"><h3>{dados_progresso["xp"]}</h3><p style="color: #6b7a90; margin:0;">Points / XP</p></div>', unsafe_allow_html=True)
+    with c2:
+        st.markdown(f'<div class="metric-card"><h3>{dados_progresso["streak"]}</h3><p style="color: #6b7a90; margin:0;">Streak 🔥</p></div>', unsafe_allow_html=True)
+    with c3:
+        st.markdown(f'<div class="metric-card"><h3>{dados_progresso["gems"]}</h3><p style="color: #6b7a90; margin:0;">Gems 💎</p></div>', unsafe_allow_html=True)
+    with c4:
+        st.markdown(f'<div class="metric-card"><h3>{dados_progresso["licoes_concluidas"]}</h3><p style="color: #6b7a90; margin:0;">Lições Concluídas 🏆</p></div>', unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.subheader("⚡ Ações Rápidas de Estudo")
+    if st.button("✅ Concluir Lição de Exemplo (+50 XP e +10 Gems)"):
+        atualizar_progresso_no_sheets(st.session_state.usuario, xp_add=50, gems_add=10, licoes_add=1)
+        st.success("Parabéns! Sua atividade foi registrada e salva no Google Sheets com sucesso!")
+        st.rerun()
+
+elif pagina == "skills":
+    st.title("🚀 Skills & Trilha de Aprendizado")
+    if st.session_state.niveis.get("A1") == "SIM":
+        st.markdown('<div class="content-card"><h4>📖 Módulo Iniciante (Nível A1)</h4><p>Conteúdos básicos liberados para o seu aprendizado.</p></div>', unsafe_allow_html=True)
+    if st.session_state.niveis.get("A2") == "SIM":
+        st.markdown('<div class="content-card"><h4>📖 Módulo Elementar (Nível A2)</h4><p>Estruturas e vocabulário intermediário inicial.</p></div>', unsafe_allow_html=True)
+    if st.session_state.niveis.get("B1") == "SIM":
+        st.markdown('<div class="content-card"><h4>📖 Módulo Intermediário (Nível B1)</h4><p>Conversação fluida e gramática.</p></div>', unsafe_allow_html=True)
+
+elif pagina == "verbs":
+    st.title("Irregular Verbs")
+    st.caption("Lista completa de 144 verbos irregulares organizados por padrões de transformação")
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    verbos_lista = carregar_verbos_irregulares()
+    total_verbos = len(verbos_lista)
+
+    col_v1, col_v2, col_v3, col_v4 = st.columns(4)
+    with col_v1:
+        st.markdown(f'<div class="metric-card"><h3>{total_verbos}</h3><p style="color: #6b7a90; margin:0;">Total de Verbos</p></div>', unsafe_allow_html=True)
+    with col_v2:
+        st.markdown('<div class="metric-card"><h3>0</h3><p style="color: #6b7a90; margin:0;">Praticados</p></div>', unsafe_allow_html=True)
+    with col_v3:
+        st.markdown('<div class="metric-card"><h3>0</h3><p style="color: #6b7a90; margin:0;">Dominados</p></div>', unsafe_allow_html=True)
+    with col_v4:
+        st.markdown('<div class="metric-card"><h3>0%</h3><p style="color: #6b7a90; margin:0;">Taxa de Acerto</p></div>', unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    padroes_disponiveis = ["Todos os padrões"] + sorted(list({str(v.get("pattern", "")).strip() for v in verbos_lista if v.get("pattern")}))
+
+    with st.container():
+        st.markdown("### Filtros")
+        st.caption("Filtre verbos por padrão ou busque por texto")
+        f_col1, f_col2 = st.columns(2)
+        with f_col1:
+            filtro_padrao = st.selectbox("Padrão", padroes_disponiveis)
+        with f_col2:
+            busca_texto = st.text_input("Buscar", placeholder="Digite infinitivo, passado ou tradução...")
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    verbos_filtrados = verbos_lista
+    if filtro_padrao != "Todos os padrões":
+        verbos_filtrados = [v for v in verbos_filtrados if str(v.get("pattern", "")).strip() == filtro_padrao]
+    if busca_texto:
+        bt = busca_texto.lower()
+        verbos_filtrados = [
+            v for v in verbos_filtrados 
+            if bt in str(v.get("infinitive", "")).lower() 
+            or bt in str(v.get("past", "")).lower() 
+            or bt in str(v.get("translation", "")).lower()
+        ]
+
+    if verbos_filtrados:
+        cols = st.columns(3)
+        for i, verb in enumerate(verbos_filtrados):
+            inf = str(verb.get("infinitive", ""))
+            fon = str(verb.get("phonetic", ""))
+            past = str(verb.get("past", ""))
+            past_fon = str(verb.get("past_phonetic", ""))
+            part = str(verb.get("participle", ""))
+            part_fon = str(verb.get("part_phonetic", ""))
+            trans = str(verb.get("translation", ""))
+            ex = str(verb.get("example", ""))
+            pat = str(verb.get("pattern", ""))
+
+            url_inf = f"https://translate.google.com/translate_tts?ie=UTF-8&q={inf}&tl=en&client=tw-ob"
+            url_past = f"https://translate.google.com/translate_tts?ie=UTF-8&q={past}&tl=en&client=tw-ob"
+            url_part = f"https://translate.google.com/translate_tts?ie=UTF-8&q={part}&tl=en&client=tw-ob"
+
+            card_html = f"""
+            <div class="verb-card">
+                <span style="background-color: #fdf2f8; color: #db2777; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; float: right;">{pat}</span>
+                
+                <h3 style="margin:0; color:#1e293b;">
+                    {inf} 
+                    <audio id="player_inf_{i}" src="{url_inf}"></audio>
+                    <span style="cursor:pointer; font-size:16px;" onclick="document.getElementById('player_inf_{i}').play()" title="Ouvir">🔊</span>
+                </h3>
+                
+                <p style="color:#64748b; font-size:13px; margin:2px 0 0 0;">{fon}</p>
+                <hr style="margin:10px 0; border-top:1px solid #f1f5f9;">
+                
+                <div style="display:flex; justify-content:space-between; font-size:13px;">
+                    <div>
+                        <b>Past Simple:</b><br>
+                        <span style="color:#4f67e8;">{past}</span>
+                        <audio id="player_past_{i}" src="{url_past}"></audio>
+                        <span style="cursor:pointer;" onclick="document.getElementById('player_past_{i}').play()" title="Ouvir">🔊</span><br>
+                        <span style="color:#94a3b8; font-size:11px;">{past_fon}</span>
+                    </div>
+                    <div>
+                        <b>Past Participle:</b><br>
+                        <span style="color:#4f67e8;">{part}</span>
+                        <audio id="player_part_{i}" src="{url_part}"></audio>
+                        <span style="cursor:pointer;" onclick="document.getElementById('player_part_{i}').play()" title="Ouvir">🔊</span><br>
+                        <span style="color:#94a3b8; font-size:11px;">{part_fon}</span>
+                    </div>
+                </div>
+                
+                <p style="margin:12px 0 4px 0; font-size:13px;"><b>Tradução:</b> {trans}</p>
+                <p style="margin:0; font-size:12px; color:#64748b; font-style:italic;">Exemplo: {ex}</p>
+            </div>
+            """
+            with cols[i % 3]:
+                st.markdown(card_html, unsafe_allow_html=True)
+    else:
+        st.info("Nenhum verbo encontrado com os filtros selecionados.")
+
+elif pagina == "practice":
+    st.title("💬 Prática com Inteligência Artificial")
+    st.info("Inicie conversas e simulações para treinar conversação e escrita de acordo com o seu nível.")
