@@ -8,6 +8,7 @@ from datetime import datetime
 PLANILHA_ID = "1AhC0DeQFA1tQyrT3ldvDun_jy2DC-Dur3WF_yOBf4qQ"
 NOME_ABA_USUARIOS = "usuarios"
 NOME_ABA_PROGRESSO = "progresso"
+NOME_ABA_VERBOS = "verbos_irregulares"
 
 st.set_page_config(
     page_title="CarolEnglish — Plataforma de Ensino",
@@ -15,7 +16,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# ======================= ESTILOS CSS (MODERN LEARNIQ) =======================
+# ======================= ESTILOS CSS =======================
 st.markdown("""
     <style>
         .stApp {
@@ -103,7 +104,7 @@ def conectar_google_sheets():
         st.error(f"Erro ao conectar ao Google Sheets: {e}")
         return None
 
-@st.cache_data(ttl=15)
+@st.cache_data(ttl=30)
 def buscar_usuarios():
     sh = conectar_google_sheets()
     if not sh:
@@ -133,15 +134,26 @@ def buscar_usuarios():
         st.error(f"Erro ao ler a aba de usuários: {e}")
         return {}
 
+@st.cache_data(ttl=60)
+def carregar_verbos_irregulares():
+    """Lê todos os 144 verbos cadastrados na aba 'verbos_irregulares' do Google Sheets."""
+    sh = conectar_google_sheets()
+    if not sh:
+        return []
+    try:
+        sheet = sh.worksheet(NOME_ABA_VERBOS)
+        return sheet.get_all_records()
+    except Exception as e:
+        st.error(f"Erro ao carregar verbos da planilha: {e}")
+        return []
+
 def carregar_progresso_usuario(usuario):
     sh = conectar_google_sheets()
     if not sh:
         return {"xp": 0, "streak": 0, "gems": 0, "licoes_concluidas": 0}
-    
     try:
         sheet = sh.worksheet(NOME_ABA_PROGRESSO)
         registros = sheet.get_all_records()
-        
         for idx, reg in enumerate(registros, start=2):
             if str(reg.get("usuario", "")).strip().lower() == usuario.lower():
                 return {
@@ -151,12 +163,10 @@ def carregar_progresso_usuario(usuario):
                     "gems": int(reg.get("gems") or 0),
                     "licoes_concluidas": int(reg.get("licoes_concluidas") or 0)
                 }
-        
         hoje = datetime.now().strftime("%d/%m/%Y")
         nova_linha = [usuario.lower(), 100, 1, 50, 1, hoje]
         sheet.append_row(nova_linha)
         return {"linha": len(registros) + 2, "xp": 100, "streak": 1, "gems": 50, "licoes_concluidas": 1}
-        
     except Exception as e:
         return {"xp": 0, "streak": 0, "gems": 0, "licoes_concluidas": 0}
 
@@ -178,7 +188,6 @@ def atualizar_progresso_no_sheets(usuario, xp_add=0, gems_add=0, licoes_add=0):
         sheet.update_cell(linha, 4, novas_gems)
         sheet.update_cell(linha, 5, novas_licoes)
         sheet.update_cell(linha, 6, hoje)
-        
         st.cache_data.clear()
     except Exception as e:
         st.error(f"Erro ao salvar progresso: {e}")
@@ -247,7 +256,7 @@ if not st.session_state.autenticado:
     st.stop()
 
 
-# ======================= SISTEMA PRINCIPAL (PÓS-LOGIN) =======================
+# ======================= SISTEMA PRINCIPAL =======================
 
 dados_progresso = carregar_progresso_usuario(st.session_state.usuario)
 
@@ -303,7 +312,6 @@ if pagina == "dashboard":
         st.markdown(f'<div class="metric-card"><h3>{dados_progresso["licoes_concluidas"]}</h3><p style="color: #6b7a90; margin:0;">Lições Concluídas 🏆</p></div>', unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
-
     st.subheader("⚡ Ações Rápidas de Estudo")
     if st.button("✅ Concluir Lição de Exemplo (+50 XP e +10 Gems)"):
         atualizar_progresso_no_sheets(st.session_state.usuario, xp_add=50, gems_add=10, licoes_add=1)
@@ -312,23 +320,24 @@ if pagina == "dashboard":
 
 elif pagina == "skills":
     st.title("🚀 Skills & Trilha de Aprendizado")
-    
     if st.session_state.niveis.get("A1") == "SIM":
         st.markdown('<div class="content-card"><h4>📖 Módulo Iniciante (Nível A1)</h4><p>Conteúdos básicos liberados para o seu aprendizado.</p></div>', unsafe_allow_html=True)
     if st.session_state.niveis.get("A2") == "SIM":
         st.markdown('<div class="content-card"><h4>📖 Módulo Elementar (Nível A2)</h4><p>Estruturas e vocabulário intermediário inicial.</p></div>', unsafe_allow_html=True)
-    if st.session_state.niveis.get("B1") == "SIM":
-        st.markdown('<div class="content-card"><h4>📖 Módulo Intermediário (Nível B1)</h4><p>Conversação fluida e gramática avançada.</p></div>', unsafe_allow_html=True)
 
 elif pagina == "verbs":
     st.title("Irregular Verbs")
-    st.caption("Lista completa de verbos irregulares organizados por padrões de transformação")
+    st.caption("Lista completa de 144 verbos irregulares organizados por padrões de transformação")
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # 4 Cards Superiores de Métricas de Verbos
+    # Carrega os 144 verbos direto do Google Sheets
+    verbos_lista = carregar_verbos_irregulares()
+    total_verbos = len(verbos_lista)
+
+    # 4 Cards Superiores
     col_v1, col_v2, col_v3, col_v4 = st.columns(4)
     with col_v1:
-        st.markdown('<div class="metric-card"><h3>144</h3><p style="color: #6b7a90; margin:0;">Total de Verbos</p></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="metric-card"><h3>{total_verbos}</h3><p style="color: #6b7a90; margin:0;">Total de Verbos</p></div>', unsafe_allow_html=True)
     with col_v2:
         st.markdown('<div class="metric-card"><h3>0</h3><p style="color: #6b7a90; margin:0;">Praticados</p></div>', unsafe_allow_html=True)
     with col_v3:
@@ -338,50 +347,51 @@ elif pagina == "verbs":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
+    # Extrai dinamicamente todos os padrões disponíveis na planilha
+    padroes_disponiveis = ["Todos os padrões"] + sorted(list({str(v.get("pattern", "")).strip() for v in verbos_lista if v.get("pattern")}))
+
     # Área de Filtros
     with st.container():
         st.markdown("### Filtros")
         st.caption("Filtre verbos por padrão ou busque por texto")
         f_col1, f_col2 = st.columns(2)
         with f_col1:
-            filtro_padrao = st.selectbox("Padrão", ["Todos os padrões", "-ought", "AAA", "AAB", "ABA", "ABB", "ABC"])
+            filtro_padrao = st.selectbox("Padrão", padroes_disponiveis)
         with f_col2:
             busca_texto = st.text_input("Buscar", placeholder="Digite infinitivo, passado ou tradução...")
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Base de dados de exemplo dos verbos (conforme a imagem de referência)
-    verbos_lista = [
-        {"infinitive": "bring", "phonetic": "/brɪŋ/", "past": "brought", "past_phonetic": "/brɔːt/", "participle": "brought", "part_phonetic": "/brɔːt/", "translation": "trazer", "example": "I brought my laptop.", "pattern": "-ought"},
-        {"infinitive": "catch", "phonetic": "/kætʃ/", "past": "caught", "past_phonetic": "/kɔːt/", "participle": "caught", "part_phonetic": "/kɔːt/", "translation": "pegar/capturar", "example": "I caught the ball.", "pattern": "-ought"},
-        {"infinitive": "fight", "phonetic": "/faɪt/", "past": "fought", "past_phonetic": "/fɔːt/", "participle": "fought", "part_phonetic": "/fɔːt/", "translation": "lutar", "example": "They fought bravely.", "pattern": "-ought"},
-    ]
-
-    # Filtragem interativa
+    # Lógica de Filtro
     verbos_filtrados = verbos_lista
     if filtro_padrao != "Todos os padrões":
-        verbos_filtrados = [v for v in verbos_filtrados if v["pattern"] == filtro_padrao]
+        verbos_filtrados = [v for v in verbos_filtrados if str(v.get("pattern", "")).strip() == filtro_padrao]
     if busca_texto:
         bt = busca_texto.lower()
-        verbos_filtrados = [v for v in verbos_filtrados if bt in v["infinitive"] or bt in v["past"] or bt in v["translation"]]
+        verbos_filtrados = [
+            v for v in verbos_filtrados 
+            if bt in str(v.get("infinitive", "")).lower() 
+            or bt in str(v.get("past", "")).lower() 
+            or bt in str(v.get("translation", "")).lower()
+        ]
 
-    # Exibição em Cards (3 colunas)
+    # Exibição dos Cards (3 colunas)
     if verbos_filtrados:
         cols = st.columns(3)
         for i, verb in enumerate(verbos_filtrados):
             with cols[i % 3]:
                 st.markdown(f"""
                     <div class="verb-card">
-                        <span class="tag-badge">{verb["pattern"]}</span>
-                        <h3 style="margin:0; color:#1e293b;">{verb["infinitive"]} 🔊</h3>
-                        <p style="color:#64748b; font-size:13px;">{verb["phonetic"]}</p>
+                        <span class="tag-badge">{verb.get("pattern", "")}</span>
+                        <h3 style="margin:0; color:#1e293b;">{verb.get("infinitive", "")} 🔊</h3>
+                        <p style="color:#64748b; font-size:13px;">{verb.get("phonetic", "")}</p>
                         <hr style="margin:10px 0; border-top:1px solid #f1f5f9;">
                         <div style="display:flex; justify-content:space-between; font-size:13px;">
-                            <div><b>Past Simple:</b><br>{verb["past"]} 🔊<br><span style="color:#94a3b8; font-size:11px;">{verb["past_phonetic"]}</span></div>
-                            <div><b>Past Participle:</b><br>{verb["participle"]} 🔊<br><span style="color:#94a3b8; font-size:11px;">{verb["part_phonetic"]}</span></div>
+                            <div><b>Past Simple:</b><br>{verb.get("past", "")} 🔊<br><span style="color:#94a3b8; font-size:11px;">{verb.get("past_phonetic", "")}</span></div>
+                            <div><b>Past Participle:</b><br>{verb.get("participle", "")} 🔊<br><span style="color:#94a3b8; font-size:11px;">{verb.get("part_phonetic", "")}</span></div>
                         </div>
-                        <p style="margin:12px 0 4px 0; font-size:13px;"><b>Tradução:</b> {verb["translation"]}</p>
-                        <p style="margin:0; font-size:12px; color:#64748b; font-style:italic;">Exemplo: {verb["example"]}</p>
+                        <p style="margin:12px 0 4px 0; font-size:13px;"><b>Tradução:</b> {verb.get("translation", "")}</p>
+                        <p style="margin:0; font-size:12px; color:#64748b; font-style:italic;">Exemplo: {verb.get("example", "")}</p>
                     </div>
                 """, unsafe_allow_html=True)
     else:
