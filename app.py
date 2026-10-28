@@ -76,7 +76,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Script global para síntese de voz nativa do navegador
+# Script JavaScript global para síntese de voz nativa do navegador (Web Speech API)
 st.markdown("""
     <script>
     function falar(texto) {
@@ -393,7 +393,7 @@ elif pagina == "verbs":
                 with st.container(border=True):
                     st.markdown(f"**Padrão:** `{pat}`")
                     
-                    # Cabeçalho do verbo com botão de áudio via JavaScript nativo
+                    # Cabeçalho do verbo com botão de áudio seguro
                     c_inf1, c_inf2 = st.columns([3, 1])
                     with c_inf1:
                         st.markdown(f"### {inf}")
