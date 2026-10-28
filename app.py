@@ -15,7 +15,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# ======================= ESTILOS CSS =======================
+# ======================= ESTILOS CSS (MODERN LEARNIQ) =======================
 st.markdown("""
     <style>
         .stApp {
@@ -65,12 +65,22 @@ st.markdown("""
             text-align: center;
             border-top: 4px solid #4f67e8;
         }
-        .content-card {
+        .verb-card {
             background: white;
             border-radius: 16px;
-            padding: 22px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.04);
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             margin-bottom: 16px;
+            border: 1px solid #eaeaea;
+        }
+        .tag-badge {
+            background-color: #fdf2f8;
+            color: #db2777;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            float: right;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -109,7 +119,6 @@ def buscar_usuarios():
                     "senha": str(reg.get("senha", "")).strip(),
                     "nome": str(reg.get("nome", "")).strip(),
                     "ativo": str(reg.get("ativo", "SIM")).strip().upper(),
-                    # Capturando os níveis de acesso (A1, A2, B1, B2, C1, C2)
                     "niveis": {
                         "A1": str(reg.get("A1", "NAO")).strip().upper(),
                         "A2": str(reg.get("A2", "NAO")).strip().upper(),
@@ -194,7 +203,7 @@ def realizar_login(usuario_input, senha_input):
             st.session_state.autenticado = True
             st.session_state.usuario = usr_key
             st.session_state.nome = dados["nome"]
-            st.session_state.niveis = dados["niveis"]  # Salva os níveis permitidos (A1, A2, etc.)
+            st.session_state.niveis = dados["niveis"]
             st.session_state.pagina_atual = "dashboard"
             st.rerun()
         else:
@@ -247,7 +256,6 @@ with st.sidebar:
     st.markdown("### 💜 CarolEnglish")
     st.caption(f"Aluno(a): **{st.session_state.nome}**")
     
-    # Exibe os níveis liberados do aluno na barra lateral
     niveis_ativos = [nv for nv, status in st.session_state.niveis.items() if status == "SIM"]
     st.caption(f"Níveis Autorizados: **{', '.join(niveis_ativos) if niveis_ativos else 'Nenhum'}**")
     st.divider()
@@ -258,6 +266,10 @@ with st.sidebar:
 
     if st.button("🚀 Skills / Trilha", use_container_width=True, type="primary" if st.session_state.pagina_atual == "skills" else "secondary"):
         st.session_state.pagina_atual = "skills"
+        st.rerun()
+
+    if st.button("🔄 Verbos Irregulares", use_container_width=True, type="primary" if st.session_state.pagina_atual == "verbs" else "secondary"):
+        st.session_state.pagina_atual = "verbs"
         st.rerun()
 
     if st.button("💬 Practice & AI", use_container_width=True, type="primary" if st.session_state.pagina_atual == "practice" else "secondary"):
@@ -301,24 +313,79 @@ if pagina == "dashboard":
 elif pagina == "skills":
     st.title("🚀 Skills & Trilha de Aprendizado")
     
-    # Exemplo prático de como filtrar conteúdos por nível do aluno:
-    st.write("Aqui estão os módulos disponíveis para o seu perfil:")
-    
-    # Verificamos se o aluno tem acesso ao nível A1
     if st.session_state.niveis.get("A1") == "SIM":
         st.markdown('<div class="content-card"><h4>📖 Módulo Iniciante (Nível A1)</h4><p>Conteúdos básicos liberados para o seu aprendizado.</p></div>', unsafe_allow_html=True)
-        
-    # Verificamos se o aluno tem acesso ao nível A2
     if st.session_state.niveis.get("A2") == "SIM":
         st.markdown('<div class="content-card"><h4>📖 Módulo Elementar (Nível A2)</h4><p>Estruturas e vocabulário intermediário inicial.</p></div>', unsafe_allow_html=True)
-        
-    # Verificamos se o aluno tem acesso ao nível B1
     if st.session_state.niveis.get("B1") == "SIM":
         st.markdown('<div class="content-card"><h4>📖 Módulo Intermediário (Nível B1)</h4><p>Conversação fluida e gramática avançada.</p></div>', unsafe_allow_html=True)
-        
-    # Se o aluno não tiver nenhum nível liberado além desses básicos
-    if not any(st.session_state.niveis.get(nv) == "SIM" for nv in ["A1", "A2", "B1", "B2", "C1", "C2"]):
-        st.warning("Nenhum módulo liberado para o seu nível atual. Fale com o seu professor.")
+
+elif pagina == "verbs":
+    st.title("Irregular Verbs")
+    st.caption("Lista completa de verbos irregulares organizados por padrões de transformação")
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # 4 Cards Superiores de Métricas de Verbos
+    col_v1, col_v2, col_v3, col_v4 = st.columns(4)
+    with col_v1:
+        st.markdown('<div class="metric-card"><h3>144</h3><p style="color: #6b7a90; margin:0;">Total de Verbos</p></div>', unsafe_allow_html=True)
+    with col_v2:
+        st.markdown('<div class="metric-card"><h3>0</h3><p style="color: #6b7a90; margin:0;">Praticados</p></div>', unsafe_allow_html=True)
+    with col_v3:
+        st.markdown('<div class="metric-card"><h3>0</h3><p style="color: #6b7a90; margin:0;">Dominados</p></div>', unsafe_allow_html=True)
+    with col_v4:
+        st.markdown('<div class="metric-card"><h3>0%</h3><p style="color: #6b7a90; margin:0;">Taxa de Acerto</p></div>', unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # Área de Filtros
+    with st.container():
+        st.markdown("### Filtros")
+        st.caption("Filtre verbos por padrão ou busque por texto")
+        f_col1, f_col2 = st.columns(2)
+        with f_col1:
+            filtro_padrao = st.selectbox("Padrão", ["Todos os padrões", "-ought", "AAA", "AAB", "ABA", "ABB", "ABC"])
+        with f_col2:
+            busca_texto = st.text_input("Buscar", placeholder="Digite infinitivo, passado ou tradução...")
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # Base de dados de exemplo dos verbos (conforme a imagem de referência)
+    verbos_lista = [
+        {"infinitive": "bring", "phonetic": "/brɪŋ/", "past": "brought", "past_phonetic": "/brɔːt/", "participle": "brought", "part_phonetic": "/brɔːt/", "translation": "trazer", "example": "I brought my laptop.", "pattern": "-ought"},
+        {"infinitive": "catch", "phonetic": "/kætʃ/", "past": "caught", "past_phonetic": "/kɔːt/", "participle": "caught", "part_phonetic": "/kɔːt/", "translation": "pegar/capturar", "example": "I caught the ball.", "pattern": "-ought"},
+        {"infinitive": "fight", "phonetic": "/faɪt/", "past": "fought", "past_phonetic": "/fɔːt/", "participle": "fought", "part_phonetic": "/fɔːt/", "translation": "lutar", "example": "They fought bravely.", "pattern": "-ought"},
+    ]
+
+    # Filtragem interativa
+    verbos_filtrados = verbos_lista
+    if filtro_padrao != "Todos os padrões":
+        verbos_filtrados = [v for v in verbos_filtrados if v["pattern"] == filtro_padrao]
+    if busca_texto:
+        bt = busca_texto.lower()
+        verbos_filtrados = [v for v in verbos_filtrados if bt in v["infinitive"] or bt in v["past"] or bt in v["translation"]]
+
+    # Exibição em Cards (3 colunas)
+    if verbos_filtrados:
+        cols = st.columns(3)
+        for i, verb in enumerate(verbos_filtrados):
+            with cols[i % 3]:
+                st.markdown(f"""
+                    <div class="verb-card">
+                        <span class="tag-badge">{verb["pattern"]}</span>
+                        <h3 style="margin:0; color:#1e293b;">{verb["infinitive"]} 🔊</h3>
+                        <p style="color:#64748b; font-size:13px;">{verb["phonetic"]}</p>
+                        <hr style="margin:10px 0; border-top:1px solid #f1f5f9;">
+                        <div style="display:flex; justify-content:space-between; font-size:13px;">
+                            <div><b>Past Simple:</b><br>{verb["past"]} 🔊<br><span style="color:#94a3b8; font-size:11px;">{verb["past_phonetic"]}</span></div>
+                            <div><b>Past Participle:</b><br>{verb["participle"]} 🔊<br><span style="color:#94a3b8; font-size:11px;">{verb["part_phonetic"]}</span></div>
+                        </div>
+                        <p style="margin:12px 0 4px 0; font-size:13px;"><b>Tradução:</b> {verb["translation"]}</p>
+                        <p style="margin:0; font-size:12px; color:#64748b; font-style:italic;">Exemplo: {verb["example"]}</p>
+                    </div>
+                """, unsafe_allow_html=True)
+    else:
+        st.info("Nenhum verbo encontrado com os filtros selecionados.")
 
 elif pagina == "practice":
     st.title("💬 Prática com Inteligência Artificial")
