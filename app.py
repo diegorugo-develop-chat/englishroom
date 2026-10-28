@@ -8,17 +8,70 @@ PLANILHA_ID = "1AhC0DeQFA1tQyrT3ldvDun_jy2DC-Dur3WF_yOBf4qQ"
 NOME_ABA_USUARIOS = "usuarios"
 
 st.set_page_config(
-    page_title="Sistema de Acesso - Streamlit",
-    page_icon="🔒",
+    page_title="Yorésilient — Dashboard",
+    page_icon="💜",
     layout="wide"
 )
+
+# ======================= ESTILOS CSS PERSONALIZADOS =======================
+st.markdown("""
+    <style>
+        /* Fundo geral da aplicação */
+        .stApp {
+            background-color: #f8f9fc;
+        }
+        
+        /* Estilização da Sidebar (Menu Lateral Roxo/Bordô) */
+        section[data-testid="stSidebar"] {
+            background: linear-gradient(180deg, #6b215a 0%, #4a153f 100%);
+            color: white;
+        }
+        section[data-testid="stSidebar"] .stButton button {
+            width: 100%;
+            justify-content: flex-start;
+            border: none;
+            border-radius: 10px;
+            padding: 0.6rem 1rem;
+            background: transparent;
+            color: #f3e8f1;
+            font-weight: 500;
+            text-align: left;
+            transition: background 0.2s;
+        }
+        section[data-testid="stSidebar"] .stButton button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+        section[data-testid="stSidebar"] .stButton button[kind="primary"] {
+            background: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            font-weight: 700;
+        }
+
+        /* Cartões e Containers do Dashboard */
+        .welcome-banner {
+            background: linear-gradient(135deg, #4a153f 0%, #7b2c6bf0 100%);
+            border-radius: 20px;
+            padding: 30px;
+            color: white;
+            box-shadow: 0 10px 25px rgba(74, 21, 63, 0.15);
+            margin-bottom: 20px;
+        }
+        .metric-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            border-top: 4px solid #6b215a;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
 # ======================= CONEXÃO COM O GOOGLE SHEETS =======================
 @st.cache_resource
 def conectar_google_sheets():
-    """Autentica no Google Sheets usando as credenciais do st.secrets ou arquivo local."""
     try:
-        # Tenta conectar via st.secrets (padrão de nuvem/Streamlit Cloud)
         if "gspread_credentials" in st.secrets:
             info_json = st.secrets["gspread_credentials"]["json_string"]
             dic_chaves = json.loads(info_json, strict=False)
@@ -26,10 +79,8 @@ def conectar_google_sheets():
                 dic_chaves["private_key"] = dic_chaves["private_key"].replace("\\\\n", "\n").replace("\\n", "\n")
             client = gspread.service_account_from_dict(dic_chaves)
         else:
-            # Fallback para o arquivo credentials.json local
             scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
             client = gspread.service_account(filename="credentials.json", scopes=scope)
-            
         return client.open_by_key(PLANILHA_ID)
     except Exception as e:
         st.error(f"Erro ao conectar ao Google Sheets: {e}")
@@ -37,16 +88,13 @@ def conectar_google_sheets():
 
 @st.cache_data(ttl=30)
 def buscar_usuarios():
-    """Lê os usuários e permissões cadastrados na aba 'usuarios'."""
     sh = conectar_google_sheets()
     if not sh:
         return {}
-    
     try:
         sheet = sh.worksheet(NOME_ABA_USUARIOS)
         registros = sheet.get_all_records()
         usuarios_dict = {}
-        
         for reg in registros:
             usr = str(reg.get("usuario", "")).strip().lower()
             if usr:
@@ -59,7 +107,7 @@ def buscar_usuarios():
                 }
         return usuarios_dict
     except Exception as e:
-        st.error(f"Erro ao ler a aba '{NOME_ABA_USUARIOS}': {e}")
+        st.error(f"Erro ao ler a aba de usuários: {e}")
         return {}
 
 # ======================= CONTROLE DE SESSÃO =======================
@@ -68,20 +116,16 @@ if "autenticado" not in st.session_state:
     st.session_state.usuario = None
     st.session_state.nome = None
     st.session_state.permissoes = {}
-    st.session_state.pagina_atual = None
+    st.session_state.pagina_atual = "dashboard"
 
 def realizar_login(usuario_input, senha_input):
     usuarios = buscar_usuarios()
     usr_key = usuario_input.strip().lower()
 
-    if not usuarios:
-        st.error("Nenhum usuário cadastrado ou erro na leitura da planilha.")
-        return
-
     if usr_key in usuarios:
         dados = usuarios[usr_key]
         if dados["ativo"] != "SIM":
-            st.error("Usuário inativo. Solicite acesso ao administrador.")
+            st.error("Usuário inativo. Solicite liberação.")
         elif dados["senha"] == senha_input.strip():
             st.session_state.autenticado = True
             st.session_state.usuario = usr_key
@@ -90,15 +134,7 @@ def realizar_login(usuario_input, senha_input):
                 "consulta": dados["consulta"],
                 "casos": dados["casos"]
             }
-            
-            # Define a primeira aba permitida como padrão
-            if dados["consulta"] == "SIM":
-                st.session_state.pagina_atual = "consulta"
-            elif dados["casos"] == "SIM":
-                st.session_state.pagina_atual = "casos"
-            else:
-                st.session_state.pagina_atual = "sem_permissao"
-                
+            st.session_state.pagina_atual = "dashboard"
             st.rerun()
         else:
             st.error("Senha incorreta.")
@@ -110,9 +146,7 @@ def realizar_logout():
     st.session_state.usuario = None
     st.session_state.nome = None
     st.session_state.permissoes = {}
-    st.session_state.pagina_atual = None
     st.rerun()
-
 
 # ======================= TELA DE LOGIN =======================
 if not st.session_state.autenticado:
@@ -127,13 +161,12 @@ if not st.session_state.autenticado:
     with col2:
         st.markdown("<br><br>", unsafe_allow_html=True)
         with st.form("login_form"):
-            st.title("🔒 Autenticação de Usuário")
-            st.caption("Acesso Restrito ao Painel de Controle")
+            st.title("💜 Yorésilient")
+            st.caption("Faça login para acessar sua plataforma")
             st.divider()
 
             usuario_input = st.text_input("Usuário")
             senha_input = st.text_input("Senha", type="password")
-
             btn_entrar = st.form_submit_button("Entrar", type="primary", use_container_width=True)
 
         if btn_entrar:
@@ -141,56 +174,20 @@ if not st.session_state.autenticado:
                 st.warning("Preencha usuário e senha.")
             else:
                 realizar_login(usuario_input, senha_input)
-
     st.stop()
 
 
-# ======================= PAINEL PRINCIPAL LOGADO =======================
+# ======================= SISTEMA PRINCIPAL (PÓS-LOGIN) =======================
 
-# --- BARRA LATERAL (SIDEBAR) ---
+# --- MENU LATERAL (SIDEBAR) ---
 with st.sidebar:
-    st.markdown(f"### 👤 {st.session_state.nome}")
-    st.caption(f"Usuário: `{st.session_state.usuario}`")
+    st.markdown("## 💜 Yorésilient")
+    st.caption(f"Logado como: **{st.session_state.nome}**")
     st.divider()
 
-    st.markdown("**Navegação:**")
-    
-    # Exibe apenas os botões das abas com permissão SIM
-    if st.session_state.permissoes.get("consulta") == "SIM":
-        if st.button("🔎 Consulta de Equipamentos", use_container_width=True,
-                     type="primary" if st.session_state.pagina_atual == "consulta" else "secondary"):
-            st.session_state.pagina_atual = "consulta"
-            st.rerun()
+    # Botões de Navegação (Você pode ir adicionando novos botões aqui aos poucos)
+    if st.button("📊 Dashboard", use_container_width=True, type="primary" if st.session_state.pagina_atual == "dashboard" else "secondary"):
+        st.session_state.pagina_atual = "dashboard"
+        st.rerun()
 
-    if st.session_state.permissoes.get("casos") == "SIM":
-        if st.button("📋 Casos em Andamento", use_container_width=True,
-                     type="primary" if st.session_state.pagina_atual == "casos" else "secondary"):
-            st.session_state.pagina_atual = "casos"
-            st.rerun()
-
-    st.markdown("<br><br>", unsafe_allow_html=True)
-    if st.button("🚪 Sair / Logout", type="secondary", use_container_width=True):
-        realizar_logout()
-
-
-# --- CONTEÚDO DAS PÁGINAS ---
-st.title("🛠️ Sistema de Gestão e Acompanhamento")
-
-if st.session_state.pagina_atual == "consulta":
-    if st.session_state.permissoes.get("consulta") != "SIM":
-        st.error("⛔ Você não tem permissão para acessar esta aba.")
-        st.stop()
-        
-    st.subheader("🔎 Área de Consulta de Equipamentos")
-    st.info("Aqui você pode inserir o campo de busca de Nota Fiscal, CAS-SO-BR ou Cliente.")
-
-elif st.session_state.pagina_atual == "casos":
-    if st.session_state.permissoes.get("casos") != "SIM":
-        st.error("⛔ Você não tem permissão para acessar esta aba.")
-        st.stop()
-
-    st.subheader("📋 Área de Casos em Andamento")
-    st.info("Aqui serão exibidos os indicadores (KPIs) e a tabela de acompanhamento de prazos.")
-
-elif st.session_state.pagina_atual == "sem_permissao":
-    st.warning("⚠️ Seu usuário está ativo, mas não possui permissão para acessar nenhuma aba específica. Contate o administrador.")
+    # Exibe aba
