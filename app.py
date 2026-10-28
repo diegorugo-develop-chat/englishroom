@@ -73,7 +73,47 @@ st.markdown("""
             box-shadow: 0 3px 10px rgba(0,0,0,0.04);
             margin-bottom: 16px;
         }
+        .verb-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 16px;
+            border: 1px solid #eaeaea;
+        }
+        .speak-btn {
+            background-color: #f0f3ff;
+            color: #4f67e8;
+            border: none;
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .speak-btn:hover {
+            background-color: #4f67e8;
+            color: white;
+        }
     </style>
+""", unsafe_allow_html=True)
+
+# Script global para síntese de voz nativa do navegador
+st.markdown("""
+    <script>
+    function falar(texto) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(texto);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.9;
+            window.speechSynthesis.speak(utterance);
+        } else {
+            alert('Seu navegador não suporta áudio nativo.');
+        }
+    }
+    </script>
 """, unsafe_allow_html=True)
 
 # ======================= CONEXÃO COM O GOOGLE SHEETS =======================
@@ -364,54 +404,47 @@ elif pagina == "verbs":
     if verbos_filtrados:
         cols = st.columns(3)
         for i, verb in enumerate(verbos_filtrados):
-            inf = str(verb.get("infinitive", ""))
+            inf = str(verb.get("infinitive", "")).replace("'", "\\'")
             fon = str(verb.get("phonetic", ""))
-            past = str(verb.get("past", ""))
+            past = str(verb.get("past", "")).replace("'", "\\'")
             past_fon = str(verb.get("past_phonetic", ""))
-            part = str(verb.get("participle", ""))
+            part = str(verb.get("participle", "")).replace("'", "\\'")
             part_fon = str(verb.get("part_phonetic", ""))
             trans = str(verb.get("translation", ""))
             ex = str(verb.get("example", ""))
             pat = str(verb.get("pattern", ""))
 
-            url_inf = f"https://translate.google.com/translate_tts?ie=UTF-8&q={inf}&tl=en&client=tw-ob"
-            url_past = f"https://translate.google.com/translate_tts?ie=UTF-8&q={past}&tl=en&client=tw-ob"
-            url_part = f"https://translate.google.com/translate_tts?ie=UTF-8&q={part}&tl=en&client=tw-ob"
-
+            card_html = f"""
+            <div class="verb-card">
+                <span style="background-color: #fdf2f8; color: #db2777; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; float: right;">{pat}</span>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="margin:0; color:#1e293b;">{inf}</h3>
+                    <button class="speak-btn" onclick="falar('{inf}')">🔊 Ouvir</button>
+                </div>
+                <p style="color:#64748b; font-size:13px; margin:2px 0 0 0;">{fon}</p>
+                <hr style="margin:10px 0; border-top:1px solid #f1f5f9;">
+                
+                <div style="display:flex; justify-content:space-between; font-size:13px; gap: 10px;">
+                    <div>
+                        <b>Past Simple:</b><br>
+                        <span style="color:#4f67e8;">{past}</span>
+                        <button class="speak-btn" style="padding: 2px 6px; font-size: 11px; margin-left: 4px;" onclick="falar('{past}')">🔊</button><br>
+                        <span style="color:#94a3b8; font-size:11px;">{past_fon}</span>
+                    </div>
+                    <div>
+                        <b>Past Participle:</b><br>
+                        <span style="color:#4f67e8;">{part}</span>
+                        <button class="speak-btn" style="padding: 2px 6px; font-size: 11px; margin-left: 4px;" onclick="falar('{part}')">🔊</button><br>
+                        <span style="color:#94a3b8; font-size:11px;">{part_fon}</span>
+                    </div>
+                </div>
+                
+                <p style="margin:12px 0 4px 0; font-size:13px;"><b>Tradução:</b> {trans}</p>
+                <p style="margin:0; font-size:12px; color:#64748b; font-style:italic;">Exemplo: {ex}</p>
+            </div>
+            """
             with cols[i % 3]:
-                with st.container(border=True):
-                    st.markdown(f"**Padrão:** `{pat}`")
-                    
-                    # Linha do Infinitivo com botão discreto de áudio
-                    c_inf1, c_inf2 = st.columns([4, 1])
-                    with c_inf1:
-                        st.markdown(f"### {inf}")
-                    with c_inf2:
-                        if st.button("🔊", key=f"btn_inf_{i}"):
-                            st.audio(url_inf, format="audio/mp3", autoplay=True)
-                            
-                    st.caption(fon)
-                    st.divider()
-                    
-                    # Past Simple e Past Participle
-                    col_p1, col_p2 = st.columns(2)
-                    with col_p1:
-                        st.markdown("**Past Simple:**")
-                        st.write(past)
-                        st.caption(past_fon)
-                        if st.button("🔊 Ouvir", key=f"btn_past_{i}"):
-                            st.audio(url_past, format="audio/mp3", autoplay=True)
-                            
-                    with col_p2:
-                        st.markdown("**Past Participle:**")
-                        st.write(part)
-                        st.caption(part_fon)
-                        if st.button("🔊 Ouvir", key=f"btn_part_{i}"):
-                            st.audio(url_part, format="audio/mp3", autoplay=True)
-                        
-                    st.divider()
-                    st.markdown(f"**Tradução:** {trans}")
-                    st.markdown(f"*Exemplo:* {ex}")
+                st.markdown(card_html, unsafe_allow_html=True)
     else:
         st.info("Nenhum verbo encontrado com os filtros selecionados.")
 
