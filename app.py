@@ -108,9 +108,7 @@ def buscar_usuarios():
                 usuarios_dict[usr] = {
                     "senha": str(reg.get("senha", "")).strip(),
                     "nome": str(reg.get("nome", "")).strip(),
-                    "ativo": str(reg.get("ativo", "NAO")).strip().upper(),
-                    "consulta": str(reg.get("consulta", "NAO")).strip().upper(),
-                    "casos": str(reg.get("casos", "NAO")).strip().upper()
+                    "ativo": str(reg.get("ativo", "NAO")).strip().upper()
                 }
         return usuarios_dict
     except Exception as e:
@@ -127,7 +125,7 @@ def carregar_progresso_usuario(usuario):
         sheet = sh.worksheet(NOME_ABA_PROGRESSO)
         registros = sheet.get_all_records()
         
-        for idx, reg in enumerate(registros, start=2): # Linha 2 em diante (considerando cabeçalho)
+        for idx, reg in enumerate(registros, start=2):
             if str(reg.get("usuario", "")).strip().lower() == usuario.lower():
                 return {
                     "linha": idx,
@@ -139,7 +137,7 @@ def carregar_progresso_usuario(usuario):
         
         # Se o usuário não tiver registro na aba progresso, cria um novo
         hoje = datetime.now().strftime("%d/%m/%Y")
-        nova_linha = [usuario.lower(), 100, 1, 50, 1, hoje] # Exemplo inicial
+        nova_linha = [usuario.lower(), 100, 1, 50, 1, hoje]
         sheet.append_row(nova_linha)
         return {"linha": len(registros) + 2, "xp": 100, "streak": 1, "gems": 50, "licoes_concluidas": 1}
         
@@ -160,17 +158,14 @@ def atualizar_progresso_no_sheets(usuario, xp_add=0, gems_add=0, licoes_add=0):
         novo_xp = prog["xp"] + xp_add
         novas_gems = prog["gems"] + gems_add
         novas_licoes = prog["licoes_concluidas"] + licoes_add
-        novo_streak = prog["streak"]
         hoje = datetime.now().strftime("%d/%m/%Y")
         
-        # Atualiza colunas específicas na linha correspondente do usuário
-        # Colunas: A(1)=usuario, B(2)=xp, C(3)=streak, D(4)=gems, E(5)=licoes_concluidas, F(6)=ultima_atualizacao
         sheet.update_cell(linha, 2, novo_xp)
         sheet.update_cell(linha, 4, novas_gems)
         sheet.update_cell(linha, 5, novas_licoes)
         sheet.update_cell(linha, 6, hoje)
         
-        st.cache_data.clear() # Limpa o cache para recarregar os dados atualizados
+        st.cache_data.clear()
     except Exception as e:
         st.error(f"Erro ao salvar progresso na planilha: {e}")
 
@@ -179,7 +174,6 @@ if "autenticado" not in st.session_state:
     st.session_state.autenticado = False
     st.session_state.usuario = None
     st.session_state.nome = None
-    st.session_state.permissoes = {}
     st.session_state.pagina_atual = "dashboard"
 
 def realizar_login(usuario_input, senha_input):
@@ -194,10 +188,6 @@ def realizar_login(usuario_input, senha_input):
             st.session_state.autenticado = True
             st.session_state.usuario = usr_key
             st.session_state.nome = dados["nome"]
-            st.session_state.permissoes = {
-                "consulta": dados["consulta"],
-                "casos": dados["casos"]
-            }
             st.session_state.pagina_atual = "dashboard"
             st.rerun()
         else:
@@ -209,7 +199,6 @@ def realizar_logout():
     st.session_state.autenticado = False
     st.session_state.usuario = None
     st.session_state.nome = None
-    st.session_state.permissoes = {}
     st.rerun()
 
 # ======================= TELA DE LOGIN =======================
@@ -243,7 +232,6 @@ if not st.session_state.autenticado:
 
 # ======================= SISTEMA PRINCIPAL (PÓS-LOGIN) =======================
 
-# Carrega os dados de progresso salvos no Google Sheets para o usuário logado
 dados_progresso = carregar_progresso_usuario(st.session_state.usuario)
 
 # --- MENU LATERAL ---
@@ -264,16 +252,6 @@ with st.sidebar:
         st.session_state.pagina_atual = "practice"
         st.rerun()
 
-    if st.session_state.permissoes.get("consulta") == "SIM":
-        if st.button("🔎 Consulta de Equipamentos", use_container_width=True, type="primary" if st.session_state.pagina_atual == "consulta" else "secondary"):
-            st.session_state.pagina_atual = "consulta"
-            st.rerun()
-
-    if st.session_state.permissoes.get("casos") == "SIM":
-        if st.button("📋 Casos em Andamento", use_container_width=True, type="primary" if st.session_state.pagina_atual == "casos" else "secondary"):
-            st.session_state.pagina_atual = "casos"
-            st.rerun()
-
     st.markdown("<br><br><br>", unsafe_allow_html=True)
     if st.button("🚪 Sair / Logout", type="secondary", use_container_width=True):
         realizar_logout()
@@ -290,7 +268,6 @@ if pagina == "dashboard":
         </div>
     """, unsafe_allow_html=True)
 
-    # Exibindo os dados dinâmicos puxados diretamente da aba 'progresso' do Google Sheets
     c1, c2, c3, c4 = st.columns(4)
     with c1:
         st.markdown(f'<div class="metric-card"><h3>{dados_progresso["xp"]}</h3><p style="color: #6b7a90; margin:0;">Points / XP</p></div>', unsafe_allow_html=True)
@@ -303,7 +280,6 @@ if pagina == "dashboard":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Botão interativo para testar o salvamento em tempo real na planilha
     st.subheader("⚡ Ações Rápidas de Estudo")
     if st.button("✅ Concluir Lição de Exemplo (+50 XP e +10 Gems)"):
         atualizar_progresso_no_sheets(st.session_state.usuario, xp_add=50, gems_add=10, licoes_add=1)
@@ -312,22 +288,8 @@ if pagina == "dashboard":
 
 elif pagina == "skills":
     st.title("🚀 Skills & Trilha de Aprendizado")
-    st.info("Aqui você acompanhará suas lições e módulos.")
+    st.info("Aqui você acompanhará suas lições e módulos de inglês.")
 
 elif pagina == "practice":
     st.title("💬 Prática com Inteligência Artificial")
-    st.info("Inicie conversas e simulações para treinar conversação.")
-
-elif pagina == "consulta":
-    if st.session_state.permissoes.get("consulta") != "SIM":
-        st.error("⛔ Você não tem permissão para acessar esta página.")
-        st.stop()
-    st.title("🔎 Consulta de Equipamentos")
-    st.info("Ferramenta operacional integrada ao Google Sheets.")
-
-elif pagina == "casos":
-    if st.session_state.permissoes.get("casos") != "SIM":
-        st.error("⛔ Você não tem permissão para acessar esta página.")
-        st.stop()
-    st.title("📋 Casos em Andamento")
-    st.info("Painel de acompanhamento de chamados e manutenções.")
+    st.info("Inicie conversas e simulações para treinar conversação e escrita.")
