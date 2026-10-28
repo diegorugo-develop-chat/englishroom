@@ -21,7 +21,7 @@ st.set_page_config(
 st.markdown("""
     <style>
         .stApp {
-            background-color: #f4f6fc;
+            background-color: #f8fafc;
             font-family: 'Inter', sans-serif;
         }
         section[data-testid="stSidebar"] {
@@ -67,12 +67,81 @@ st.markdown("""
             text-align: center;
             border-top: 4px solid #4f67e8;
         }
-        .content-card {
-            background: white;
+        
+        /* Estilos da Página de Lição / Tópico */
+        .topic-header-tag {
+            color: #0d9488;
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        .topic-title {
+            font-size: 36px;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 0 0 8px 0;
+        }
+        .topic-subtitle {
+            color: #64748b;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        .section-tag {
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            color: #64748b;
+            text-transform: uppercase;
+            margin-top: 24px;
+            margin-bottom: 12px;
+        }
+        .info-box-light {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
             border-radius: 16px;
-            padding: 22px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.04);
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
             margin-bottom: 16px;
+            color: #334155;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+        .struct-row {
+            background: #f1f5f9;
+            border-radius: 10px;
+            padding: 12px 18px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            font-family: monospace;
+            font-size: 15px;
+        }
+        .struct-symbol {
+            font-weight: bold;
+            width: 30px;
+            color: #0d9488;
+        }
+        .tip-card-green {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 12px;
+            padding: 16px;
+            color: #166534;
+        }
+        .error-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+        }
+        .err-wrong {
+            color: #dc2626;
+            text-decoration: line-through;
+            font-weight: 600;
+        }
+        .err-correct {
+            color: #16a34a;
+            font-weight: 700;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -329,7 +398,6 @@ if pagina == "dashboard":
         st.rerun()
 
 elif pagina == "skills":
-    # Dados estruturados da Trilha de Aprendizado (A1 a B2 baseados na referência)
     trilha_dados = {
         "A1": {
             "titulo": "A1 · Iniciante",
@@ -407,46 +475,132 @@ elif pagina == "skills":
         }
     }
 
-    # Se o utilizador clicou num tópico específico, mostra a lição/explicação e exercícios
+    # ================= VISUALIZAÇÃO COMPLETA DO TÓPICO / LIÇÃO =================
     if st.session_state.get("topico_selecionado"):
         topico = st.session_state.topico_selecionado
-        if st.button("⬅️ Voltar para a Trilha de Aprendizado"):
-            st.session_state.topico_selecionado = None
-            st.rerun()
-
-        st.markdown(f"## 📖 Módulo de Estudo: **{topico}**")
-        st.markdown("---")
-
-        # Exemplo de conteúdo didático e interativo para o tópico
-        st.markdown("### 📝 Explicação Teórica")
-        st.write(f"Aqui você aprenderá todas as regras, estrutura e exemplos práticos sobre **{topico}**. Esta lição foi desenvolvida para acelerar a sua fluência com explicações claras em português e áudios nativos.")
-
-        st.info("💡 **Dica de Ouro:** Ouça os exemplos em áudio e repita em voz alta para treinar a sua pronúncia.")
-
-        st.markdown("---")
-        st.markdown("### ✍️ Mini Quiz / Exercício Prático")
         
-        # Exemplo de questão interativa
-        st.write(f"**Pergunta 1:** Como se aplica corretamente a estrutura de **{topico}** numa frase afirmativa?")
-        resposta = st.radio("Escolha a alternativa correta:", [
-            "Opção A: Estrutura direta com o verbo principal.",
-            "Opção B: Inversão do sujeito com o auxiliar.",
-            "Opção C: Uso exclusivo no tempo passado contínuo."
-        ], key=f"quiz_{topico}")
+        col_voltar, col_vazia = st.columns([1, 4])
+        with col_voltar:
+            if st.button("⬅️ Voltar à Trilha"):
+                st.session_state.topico_selecionado = None
+                st.rerun()
 
-        if st.button("Enviar Resposta 🚀"):
-            if "Opção A" in resposta:
-                st.success("🎉 Resposta correta! Ganhou +20 XP e +5 Gems!")
-                atualizar_progresso_no_sheets(st.session_state.usuario, xp_add=20, gems_add=5)
+        st.markdown('<div class="topic-header-tag">A1 · Iniciante</div>', unsafe_allow_html=True)
+        st.markdown(f'<h1 class="topic-title">{topico}</h1>', unsafe_allow_html=True)
+        st.markdown('<div class="topic-subtitle">O verbo que significa <b>ser</b> e <b>estar</b> ao mesmo tempo.</div>', unsafe_allow_html=True)
+
+        # Botões de Navegação Rápida
+        st.markdown("""
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px;">
+                <span style="background:#f1f5f9; padding: 6px 14px; border-radius: 20px; font-size:13px; font-weight:600; color:#475569;">A ideia</span>
+                <span style="background:#f1f5f9; padding: 6px 14px; border-radius: 20px; font-size:13px; font-weight:600; color:#475569;">Estrutura</span>
+                <span style="background:#f1f5f9; padding: 6px 14px; border-radius: 20px; font-size:13px; font-weight:600; color:#475569;">Exemplos</span>
+                <span style="background:#f1f5f9; padding: 6px 14px; border-radius: 20px; font-size:13px; font-weight:600; color:#475569;">Dicas</span>
+                <span style="background:#f1f5f9; padding: 6px 14px; border-radius: 20px; font-size:13px; font-weight:600; color:#475569;">Erros comuns</span>
+                <span style="background:#f1f5f9; padding: 6px 14px; border-radius: 20px; font-size:13px; font-weight:600; color:#475569;">Pratique</span>
+            </div>
+        """, unsafe_allow_html=True)
+
+        # --- SEÇÃO: A IDEIA ---
+        st.markdown('<div class="section-tag">A IDEIA</div>', unsafe_allow_html=True)
+        st.markdown("""
+            <div class="info-box-light">
+                Usamos o <b>to be</b> para dizer quem somos, de onde somos, nossa idade, profissão, como estamos e onde estamos.
+                Em português temos dois verbos (ser e estar); em inglês, um só faz os dois papéis. Ele muda conforme a pessoa:
+                <b style="color:#0d9488;">am</b> com I, <b style="color:#0d9488;">is</b> com he/she/it e <b style="color:#0d9488;">are</b> com you/we/they.
+            </div>
+        """, unsafe_allow_html=True)
+
+        # --- SEÇÃO: ESTRUTURA ---
+        st.markdown('<div class="section-tag">ESTRUTURA</div>', unsafe_allow_html=True)
+        st.markdown("""
+            <div class="info-box-light">
+                <div class="struct-row">
+                    <span class="struct-symbol">+</span>
+                    <span>I <b>am</b> (I'm) &nbsp;·&nbsp; he/she/it <b>is</b> (she's) &nbsp;·&nbsp; you/we/they <b>are</b> (we're)</span>
+                </div>
+                <div class="struct-row">
+                    <span class="struct-symbol">-</span>
+                    <span>I'm <b>not</b> &nbsp;·&nbsp; she <b>isn't</b> &nbsp;·&nbsp; they <b>aren't</b></span>
+                </div>
+                <div class="struct-row">
+                    <span class="struct-symbol">?</span>
+                    <span><b>Am</b> I...? &nbsp;·&nbsp; <b>Is</b> he...? &nbsp;·&nbsp; <b>Are</b> you...?</span>
+                </div>
+                <div class="struct-row">
+                    <span class="struct-symbol">✓</span>
+                    <span>Respostas curtas: Yes, I <b>am</b>. / No, she <b>isn't</b>.</span>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+
+        # --- SEÇÃO: EXEMPLOS ---
+        st.markdown('<div class="section-tag">EXEMPLOS</div>', unsafe_allow_html=True)
+        st.caption("Toque na frase para ver a tradução")
+        
+        ex1, ex2 = st.columns(2)
+        with ex1:
+            st.info("I **am** 14 years old.  \n*(Eu tenho 14 anos de idade.)*")
+            st.info("We **aren't** tired. We're excited!  \n*(Nós não estamos cansados. Estamos empolgados!)*")
+        with ex2:
+            st.info("My best friend **is** from Curitiba.  \n*(O meu melhor amigo é de Curitiba.)*")
+            st.info("**Is** your mom a teacher? – Yes, she **is**.  \n*(A tua mãe é professora? – Sim, é.)*")
+
+        # --- SEÇÃO: DICAS & ERROS COMUNS ---
+        col_dicas, col_erros = st.columns(2)
+        with col_dicas:
+            st.markdown('<div class="section-tag">DICAS</div>', unsafe_allow_html=True)
+            st.markdown("""
+                <div class="tip-card-green">
+                    <b>Idade é com BE</b><br>
+                    Em inglês, você <i>é</i> a sua idade: <i>I'm 15</i>. Nunca <i>I have 15</i>.
+                    <br><br>
+                    <b>Sentimentos também</b><br>
+                    Fome, sede, frio e medo usam <i>be</i>: <i>I'm hungry, I'm cold, I'm afraid</i>.
+                </div>
+            """, unsafe_allow_html=True)
+            
+        with col_erros:
+            st.markdown('<div class="section-tag">ERROS COMUNS</div>', unsafe_allow_html=True)
+            st.markdown("""
+                <div class="error-card">
+                    <span class="err-wrong">I have 13 years.</span><br>
+                    <span class="err-correct">I am 13 years old.</span><br>
+                    <small style="color:#64748b;">Idade usa be, não have.</small>
+                    <hr style="margin: 8px 0; border-top:1px solid #f1f5f9;">
+                    <span class="err-wrong">She are my sister.</span><br>
+                    <span class="err-correct">She is my sister.</span><br>
+                    <small style="color:#64748b;">Com he/she/it, use sempre is.</small>
+                </div>
+            """, unsafe_allow_html=True)
+
+        # --- SEÇÃO: PRATIQUE (EXERCÍCIOS) ---
+        st.markdown('<div class="section-tag">PRATIQUE</div>', unsafe_allow_html=True)
+        st.markdown("### Exercícios Interativos")
+        st.caption("Escolha a opção certa ou escreva a resposta. Cada acerto acumula pontos na sua conta!")
+
+        q1 = st.radio("1. My friends ___ very funny.", ["is", "am", "are"], key="q1_v2")
+        q2 = st.radio("2. ___ you hungry?", ["Is", "Are", "Am"], key="q2_v2")
+        q3 = st.radio("3. How old are you? – I ___ 15.", ["have", "am", "is"], key="q3_v2")
+
+        if st.button("Conferir Respostas dos Exercícios 🚀"):
+            acertos = 0
+            if q1 == "are": acertos += 1
+            if q2 == "Are": acertos += 1
+            if q3 == "am": acertos += 1
+
+            if acertos == 3:
+                st.success("🎉 Excelente! Acertou 3/3 questões! Ganhou +30 XP e +10 Gems!")
+                atualizar_progresso_no_sheets(st.session_state.usuario, xp_add=30, gems_add=10)
             else:
-                st.error("❌ Resposta incorreta. Reveja a explicação teórica acima e tente novamente!")
+                st.warning(f"Acertou {acertos}/3 questões. Reveja as respostas acima e tente novamente!")
 
+    # ================= LISTA DA TRILHA DE APRENDIZADO (CARDS) =================
     else:
         st.title("🚀 Skills & Trilha de Aprendizado")
-        st.caption("Selecione qualquer tópico abaixo para abrir a explicação teórica e os exercícios interativos.")
+        st.caption("Selecione qualquer tópico abaixo para abrir a lição completa, explicações e exercícios.")
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # Legenda de Status
         st.markdown("""
             <div style="display: flex; gap: 20px; font-size: 14px; color: #5c6b73; margin-bottom: 20px;">
                 <div>⚪ <b>Não começou</b></div>
@@ -455,13 +609,11 @@ elif pagina == "skills":
             </div>
         """, unsafe_allow_html=True)
 
-        # Abas para cada Nível (A1, A2, B1, B2)
         abas = st.tabs(["A1 · Iniciante", "A2 · Básico", "B1 · Intermediário", "B2 · Intermediário Superior"])
 
         for idx, (nivel_key, dados_nivel) in enumerate(trilha_dados.items()):
             with abas[idx]:
                 st.markdown(f"### {dados_nivel['titulo']}")
-                st.markdown(f"<p style='color: #64748b;'>Progresso do módulo</p>", unsafe_allow_html=True)
                 
                 topicos = dados_nivel["topicos"]
                 cols = st.columns(3)
@@ -471,28 +623,43 @@ elif pagina == "skills":
                     sub = topico["sub"]
                     status = topico["status"]
                     
-                    # Ícone correspondente ao status
-                    if status == "completo":
-                        icone_status = "🟢"
-                    elif status == "em_andamento":
-                        icone_status = "🟡"
-                    else:
-                        icone_status = "⚪"
+                    if status == "completo": icone_status = "🟢"
+                    elif status == "em_andamento": icone_status = "🟡"
+                    else: icone_status = "⚪"
 
                     card_html = f"""
-                    <div style="background: white; border-radius: 14px; padding: 16px; box-shadow: 0 3px 10px rgba(0,0,0,0.04); border: 1px solid #eaeaea; height: 110px; margin-bottom: 14px;">
-                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                            <span style="font-size: 16px;">{icone_status}</span>
-                            <b style="color: #1e293b; font-size: 14px;">{nome}</b>
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <meta charset="utf-8">
+                        <style>
+                            body {{ font-family: 'Inter', sans-serif; margin:0; padding:2px; background: transparent; }}
+                            .skill-card {{
+                                background: white;
+                                border-radius: 14px;
+                                padding: 16px;
+                                box-shadow: 0 3px 10px rgba(0,0,0,0.04);
+                                border: 1px solid #eaeaea;
+                                height: 100px;
+                                box-sizing: border-box;
+                            }}
+                        </style>
+                    </head>
+                    <body>
+                        <div class="skill-card">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                <span style="font-size: 16px;">{icone_status}</span>
+                                <b style="color: #1e293b; font-size: 14px;">{nome}</b>
+                            </div>
+                            <p style="color: #64748b; font-size: 12px; margin: 0; padding-left: 24px;">{sub}</p>
                         </div>
-                        <p style="color: #64748b; font-size: 12px; margin: 0; padding-left: 24px;">{sub}</p>
-                    </div>
+                    </body>
+                    </html>
                     """
                     
                     with cols[t_idx % 3]:
-                        components.html(card_html, height=130, scrolling=False)
-                        # Botão interativo do Streamlit logo abaixo do card para abrir a lição
-                        if st.button(f"Estudar ➔", key=f"btn_{nivel_key}_{t_idx}"):
+                        components.html(card_html, height=110, scrolling=False)
+                        if st.button(f"Abrir Lição ➔", key=f"btn_{nivel_key}_{t_idx}"):
                             st.session_state.topico_selecionado = nome
                             st.rerun()
 
