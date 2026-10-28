@@ -73,10 +73,28 @@ st.markdown("""
             box-shadow: 0 3px 10px rgba(0,0,0,0.04);
             margin-bottom: 16px;
         }
+        /* Estilo idêntico ao botão de áudio da referência */
+        .audio-action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            background-color: transparent;
+            border: 1px solid #e2e8f0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #4f67e8;
+        }
+        .audio-action-btn:hover {
+            background-color: #f1f5f9;
+            border-color: #cbd5e1;
+        }
     </style>
 """, unsafe_allow_html=True)
 
-# Script JavaScript global para síntese de voz nativa do navegador (Web Speech API)
+# Script JavaScript global para síntese de voz nativa (Web Speech API)
 st.markdown("""
     <script>
     function falar(texto) {
@@ -343,11 +361,11 @@ elif pagina == "verbs":
     with col_v1:
         st.markdown(f'<div class="metric-card"><h3>{total_verbos}</h3><p style="color: #6b7a90; margin:0;">Total de Verbos</p></div>', unsafe_allow_html=True)
     with col_v2:
-        st.markdown(f'<div class="metric-card"><h3>0</h3><p style="color: #6b7a90; margin:0;">Praticados</p></div>', unsafe_allow_html=True)
+        st.markdown('<div class="metric-card"><h3>0</h3><p style="color: #6b7a90; margin:0;">Praticados</p></div>', unsafe_allow_html=True)
     with col_v3:
-        st.markdown(f'<div class="metric-card"><h3>0</h3><p style="color: #6b7a90; margin:0;">Dominados</p></div>', unsafe_allow_html=True)
+        st.markdown('<div class="metric-card"><h3>0</h3><p style="color: #6b7a90; margin:0;">Dominados</p></div>', unsafe_allow_html=True)
     with col_v4:
-        st.markdown(f'<div class="metric-card"><h3>0%</h3><p style="color: #6b7a90; margin:0;">Taxa de Acerto</p></div>', unsafe_allow_html=True)
+        st.markdown('<div class="metric-card"><h3>0%</h3><p style="color: #6b7a90; margin:0;">Taxa de Acerto</p></div>', unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -376,6 +394,9 @@ elif pagina == "verbs":
             or bt in str(v.get("translation", "")).lower()
         ]
 
+    # Ícone SVG exato do Lucide (Volume 2) idêntico à referência que você mandou
+    icon_svg = '''<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"></path><path d="M16 9a5 5 0 0 1 0 6"></path><path d="M19.364 18.364a9 9 0 0 0 0-12.728"></path></svg>'''
+
     if verbos_filtrados:
         cols = st.columns(3)
         for i, verb in enumerate(verbos_filtrados):
@@ -389,40 +410,48 @@ elif pagina == "verbs":
             ex = str(verb.get("example", ""))
             pat = str(verb.get("pattern", ""))
 
+            card_html = f"""
+            <div style="background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 16px; border: 1px solid #eaeaea;">
+                <span style="background-color: #fdf2f8; color: #db2777; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; float: right;">{pat}</span>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="margin:0; color:#1e293b;">{inf}</h3>
+                    <button class="audio-action-btn" onclick="falar('{inf}')" title="Ouvir pronúncia: {inf}">{icon_svg}</button>
+                </div>
+                
+                <p style="color:#64748b; font-size:13px; margin:2px 0 0 0;">{fon}</p>
+                <hr style="margin:10px 0; border-top:1px solid #f1f5f9;">
+                
+                <div style="display:flex; justify-content:space-between; font-size:13px; gap: 10px;">
+                    <div>
+                        <b>Past Simple:</b><br>
+                        <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
+                            <span style="color:#4f67e8; font-weight:600;">{past}</span>
+                            <button class="audio-action-btn" style="width: 26px; height: 26px;" onclick="falar('{past}')" title="Ouvir pronúncia: {past}">{icon_svg}</button>
+                        </div>
+                        <span style="color:#94a3b8; font-size:11px;">{past_fon}</span>
+                    </div>
+                    <div>
+                        <b>Past Participle:</b><br>
+                        <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
+                            <span style="color:#4f67e8; font-weight:600;">{part}</span>
+                            <button class="audio-action-btn" style="width: 26px; height: 26px;" onclick="falar('{part}')" title="Ouvir pronúncia: {part}">{icon_svg}</button>
+                        </div>
+                        <span style="color:#94a3b8; font-size:11px;">{part_fon}</span>
+                    </div>
+                </div>
+                
+                <p style="margin:12px 0 4px 0; font-size:13px;"><b>Tradução:</b> {trans}</p>
+                <p style="margin:0; font-size:12px; color:#64748b; font-style:italic;">Exemplo: {ex}</p>
+            </div>
+            """
             with cols[i % 3]:
-                with st.container(border=True):
-                    st.markdown(f"**Padrão:** `{pat}`")
-                    
-                    # Cabeçalho do verbo com botão de áudio seguro
-                    c_inf1, c_inf2 = st.columns([3, 1])
-                    with c_inf1:
-                        st.markdown(f"### {inf}")
-                    with c_inf2:
-                        st.markdown(f'<button onclick="falar(\'{inf}\')" style="background:#f0f3ff; color:#4f67e8; border:none; border-radius:8px; padding:6px 10px; cursor:pointer; font-weight:600;">🔊 Ouvir</button>', unsafe_allow_html=True)
-                            
-                    st.caption(fon)
-                    st.divider()
-                    
-                    # Past Simple e Past Participle
-                    col_p1, col_p2 = st.columns(2)
-                    with col_p1:
-                        st.markdown("**Past Simple:**")
-                        st.markdown(f"<span style='color:#4f67e8; font-weight:600;'>{past}</span>", unsafe_allow_html=True)
-                        st.caption(past_fon)
-                        st.markdown(f'<button onclick="falar(\'{past}\')" style="background:#f0f3ff; color:#4f67e8; border:none; border-radius:6px; padding:4px 8px; cursor:pointer; font-size:11px; font-weight:600;">🔊 Ouvir</button>', unsafe_allow_html=True)
-                            
-                    with col_p2:
-                        st.markdown("**Past Participle:**")
-                        st.markdown(f"<span style='color:#4f67e8; font-weight:600;'>{part}</span>", unsafe_allow_html=True)
-                        st.caption(part_fon)
-                        st.markdown(f'<button onclick="falar(\'{part}\')" style="background:#f0f3ff; color:#4f67e8; border:none; border-radius:6px; padding:4px 8px; cursor:pointer; font-size:11px; font-weight:600;">🔊 Ouvir</button>', unsafe_allow_html=True)
-                        
-                    st.divider()
-                    st.markdown(f"**Tradução:** {trans}")
-                    st.markdown(f"*Exemplo:* {ex}")
+                st.markdown(card_html, unsafe_allow_html=True)
     else:
         st.info("Nenhum verbo encontrado com os filtros selecionados.")
 
 elif pagina == "practice":
     st.title("💬 Prática com Inteligência Artificial")
     st.info("Inicie conversas e simulações para treinar conversação e escrita de acordo com o seu nível.")
+
+```
