@@ -73,29 +73,6 @@ st.markdown("""
             box-shadow: 0 3px 10px rgba(0,0,0,0.04);
             margin-bottom: 16px;
         }
-        .verb-card {
-            background: white;
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            margin-bottom: 16px;
-            border: 1px solid #eaeaea;
-        }
-        .speak-btn {
-            background-color: #f0f3ff;
-            color: #4f67e8;
-            border: none;
-            border-radius: 8px;
-            padding: 6px 12px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .speak-btn:hover {
-            background-color: #4f67e8;
-            color: white;
-        }
     </style>
 """, unsafe_allow_html=True)
 
@@ -109,8 +86,6 @@ st.markdown("""
             utterance.lang = 'en-US';
             utterance.rate = 0.9;
             window.speechSynthesis.speak(utterance);
-        } else {
-            alert('Seu navegador não suporta áudio nativo.');
         }
     }
     </script>
@@ -404,47 +379,47 @@ elif pagina == "verbs":
     if verbos_filtrados:
         cols = st.columns(3)
         for i, verb in enumerate(verbos_filtrados):
-            inf = str(verb.get("infinitive", "")).replace("'", "\\'")
+            inf = str(verb.get("infinitive", ""))
             fon = str(verb.get("phonetic", ""))
-            past = str(verb.get("past", "")).replace("'", "\\'")
+            past = str(verb.get("past", ""))
             past_fon = str(verb.get("past_phonetic", ""))
-            part = str(verb.get("participle", "")).replace("'", "\\'")
+            part = str(verb.get("participle", ""))
             part_fon = str(verb.get("part_phonetic", ""))
             trans = str(verb.get("translation", ""))
             ex = str(verb.get("example", ""))
             pat = str(verb.get("pattern", ""))
 
-            card_html = f"""
-            <div class="verb-card">
-                <span style="background-color: #fdf2f8; color: #db2777; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; float: right;">{pat}</span>
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h3 style="margin:0; color:#1e293b;">{inf}</h3>
-                    <button class="speak-btn" onclick="falar('{inf}')">🔊 Ouvir</button>
-                </div>
-                <p style="color:#64748b; font-size:13px; margin:2px 0 0 0;">{fon}</p>
-                <hr style="margin:10px 0; border-top:1px solid #f1f5f9;">
-                
-                <div style="display:flex; justify-content:space-between; font-size:13px; gap: 10px;">
-                    <div>
-                        <b>Past Simple:</b><br>
-                        <span style="color:#4f67e8;">{past}</span>
-                        <button class="speak-btn" style="padding: 2px 6px; font-size: 11px; margin-left: 4px;" onclick="falar('{past}')">🔊</button><br>
-                        <span style="color:#94a3b8; font-size:11px;">{past_fon}</span>
-                    </div>
-                    <div>
-                        <b>Past Participle:</b><br>
-                        <span style="color:#4f67e8;">{part}</span>
-                        <button class="speak-btn" style="padding: 2px 6px; font-size: 11px; margin-left: 4px;" onclick="falar('{part}')">🔊</button><br>
-                        <span style="color:#94a3b8; font-size:11px;">{part_fon}</span>
-                    </div>
-                </div>
-                
-                <p style="margin:12px 0 4px 0; font-size:13px;"><b>Tradução:</b> {trans}</p>
-                <p style="margin:0; font-size:12px; color:#64748b; font-style:italic;">Exemplo: {ex}</p>
-            </div>
-            """
             with cols[i % 3]:
-                st.markdown(card_html, unsafe_allow_html=True)
+                with st.container(border=True):
+                    st.markdown(f"**Padrão:** `{pat}`")
+                    
+                    # Cabeçalho do verbo com botão de áudio via JavaScript nativo
+                    c_inf1, c_inf2 = st.columns([3, 1])
+                    with c_inf1:
+                        st.markdown(f"### {inf}")
+                    with c_inf2:
+                        st.markdown(f'<button onclick="falar(\'{inf}\')" style="background:#f0f3ff; color:#4f67e8; border:none; border-radius:8px; padding:6px 10px; cursor:pointer; font-weight:600;">🔊 Ouvir</button>', unsafe_allow_html=True)
+                            
+                    st.caption(fon)
+                    st.divider()
+                    
+                    # Past Simple e Past Participle
+                    col_p1, col_p2 = st.columns(2)
+                    with col_p1:
+                        st.markdown("**Past Simple:**")
+                        st.markdown(f"<span style='color:#4f67e8; font-weight:600;'>{past}</span>", unsafe_allow_html=True)
+                        st.caption(past_fon)
+                        st.markdown(f'<button onclick="falar(\'{past}\')" style="background:#f0f3ff; color:#4f67e8; border:none; border-radius:6px; padding:4px 8px; cursor:pointer; font-size:11px; font-weight:600;">🔊 Ouvir</button>', unsafe_allow_html=True)
+                            
+                    with col_p2:
+                        st.markdown("**Past Participle:**")
+                        st.markdown(f"<span style='color:#4f67e8; font-weight:600;'>{part}</span>", unsafe_allow_html=True)
+                        st.caption(part_fon)
+                        st.markdown(f'<button onclick="falar(\'{part}\')" style="background:#f0f3ff; color:#4f67e8; border:none; border-radius:6px; padding:4px 8px; cursor:pointer; font-size:11px; font-weight:600;">🔊 Ouvir</button>', unsafe_allow_html=True)
+                        
+                    st.divider()
+                    st.markdown(f"**Tradução:** {trans}")
+                    st.markdown(f"*Exemplo:* {ex}")
     else:
         st.info("Nenhum verbo encontrado com os filtros selecionados.")
 
