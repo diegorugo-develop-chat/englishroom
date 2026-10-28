@@ -144,28 +144,30 @@ st.markdown("""
             font-weight: 700;
         }
         
-        /* Estilos dos Cards de Exercícios Inspirados no Duolingo/YouResilient */
+        /* Estilos dos Cards de Exercícios Inspirados no YouResilient */
         .ex-card-correct {
             background-color: #f0fdf4;
             border: 1px solid #bbf7d0;
-            border-radius: 14px;
-            padding: 16px;
-            margin-bottom: 14px;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
         }
         .ex-card-wrong {
             background-color: #fef2f2;
             border: 1px solid #fecaca;
-            border-radius: 14px;
-            padding: 16px;
-            margin-bottom: 14px;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
         }
         .ex-card-neutral {
             background-color: #ffffff;
             border: 1px solid #e2e8f0;
-            border-radius: 14px;
-            padding: 16px;
-            margin-bottom: 14px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
         }
     </style>
 """, unsafe_allow_html=True)
@@ -499,7 +501,7 @@ elif pagina == "skills":
         }
     }
 
-    # ================= VISUALIZAÇÃO DA LIÇÃO / TÓPICO COM EXERCÍCIOS INTERATIVOS =================
+    # ================= VISUALIZAÇÃO DA LIÇÃO / TÓPICO =================
     if st.session_state.get("topico_selecionado"):
         topico = st.session_state.topico_selecionado
         
@@ -576,12 +578,11 @@ elif pagina == "skills":
                 </div>
             """, unsafe_allow_html=True)
 
-        # ================= SEÇÃO PRATIQUE (COM ERROS E ACERTOS INTERATIVOS) =================
+        # ================= SEÇÃO PRATIQUE =================
         st.markdown('<div class="section-tag">PRATIQUE</div>', unsafe_allow_html=True)
         st.markdown("### Exercícios Interativos")
-        st.caption("Escolha a opção certa ou escreva a resposta. Cada tentativa confere feedback imediato!")
+        st.caption("Clique diretamente nas caixas de opções ou preencha as questões dissertativas para conferir.")
 
-        # Controlo de submissão no session state para cada questão
         if "respostas_submetidas" not in st.session_state:
             st.session_state.respostas_submetidas = {}
 
@@ -591,69 +592,87 @@ elif pagina == "skills":
         st.progress(acertos_atuais / 5)
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # --- QUESTÃO 1 ---
+        # --- QUESTÃO 1 (Múltipla Escolha em Caixas Lado a Lado) ---
         status_q1 = st.session_state.respostas_submetidas.get("q1", None)
         if status_q1 == "correto":
-            st.markdown('<div class="ex-card-correct">1. My friends ___ very funny.<br><b>Resposta escolhida: are</b><br>✅ <b>Isso!</b> <i>My friends</i> = they → are.</div>', unsafe_allow_html=True)
+            st.markdown('<div class="ex-card-correct">1. My friends ___ very funny.<br><br>✅ <b>Isso!</b> A resposta é <b>are</b>. <i>My friends</i> = they → are.</div>', unsafe_allow_html=True)
         elif status_q1 == "errado":
-            st.markdown('<div class="ex-card-wrong">1. My friends ___ very funny.<br>❌ <b>Quase.</b> A resposta certa é <b>are</b>. <i>My friends</i> = they → are.</div>', unsafe_allow_html=True)
+            st.markdown('<div class="ex-card-wrong">1. My friends ___ very funny.<br><br>❌ <b>Quase.</b> A resposta é <b>are</b>. <i>My friends</i> = they → are.</div>', unsafe_allow_html=True)
         else:
             st.markdown('<div class="ex-card-neutral">1. My friends ___ very funny.</div>', unsafe_allow_html=True)
-            r1 = st.radio("Escolha a opção para a Q1:", ["is", "am", "are"], key="input_q1", label_visibility="collapsed")
-            if st.button("Conferir Q1"):
-                if r1 == "are":
+            bc1, bc2, bc3 = st.columns([1, 1, 1])
+            with bc1:
+                if st.button("is", key="btn_q1_is", use_container_width=True):
+                    st.session_state.respostas_submetidas["q1"] = "errado"
+                    st.rerun()
+            with bc2:
+                if st.button("am", key="btn_q1_am", use_container_width=True):
+                    st.session_state.respostas_submetidas["q1"] = "errado"
+                    st.rerun()
+            with bc3:
+                if st.button("are", key="btn_q1_are", use_container_width=True):
                     st.session_state.respostas_submetidas["q1"] = "correto"
                     atualizar_progresso_no_sheets(st.session_state.usuario, xp_add=10, gems_add=2)
-                else:
-                    st.session_state.respostas_submetidas["q1"] = "errado"
-                st.rerun()
+                    st.rerun()
 
-        # --- QUESTÃO 2 ---
+        # --- QUESTÃO 2 (Múltipla Escolha em Caixas Lado a Lado) ---
         status_q2 = st.session_state.respostas_submetidas.get("q2", None)
         if status_q2 == "correto":
-            st.markdown('<div class="ex-card-correct">2. ___ you hungry?<br><b>Resposta escolhida: Are</b><br>✅ <b>Isso!</b> Pergunta com <i>you</i> → Are.</div>', unsafe_allow_html=True)
+            st.markdown('<div class="ex-card-correct">2. ___ you hungry?<br><br>✅ <b>Isso!</b> Pergunta com <i>you</i> → Are.</div>', unsafe_allow_html=True)
         elif status_q2 == "errado":
-            st.markdown('<div class="ex-card-wrong">2. ___ you hungry?<br>❌ <b>Incorreto.</b> A resposta certa é <b>Are</b>.</div>', unsafe_allow_html=True)
+            st.markdown('<div class="ex-card-wrong">2. ___ you hungry?<br><br>❌ <b>Incorreto.</b> A resposta certa é <b>Are</b>.</div>', unsafe_allow_html=True)
         else:
             st.markdown('<div class="ex-card-neutral">2. ___ you hungry?</div>', unsafe_allow_html=True)
-            r2 = st.radio("Escolha a opção para a Q2:", ["Is", "Are", "Am"], key="input_q2", label_visibility="collapsed")
-            if st.button("Conferir Q2"):
-                if r2 == "Are":
+            bc1, bc2, bc3 = st.columns([1, 1, 1])
+            with bc1:
+                if st.button("Is", key="btn_q2_is", use_container_width=True):
+                    st.session_state.respostas_submetidas["q2"] = "errado"
+                    st.rerun()
+            with bc2:
+                if st.button("Are", key="btn_q2_are", use_container_width=True):
                     st.session_state.respostas_submetidas["q2"] = "correto"
                     atualizar_progresso_no_sheets(st.session_state.usuario, xp_add=10, gems_add=2)
-                else:
+                    st.rerun()
+            with bc3:
+                if st.button("Am", key="btn_q2_am", use_container_width=True):
                     st.session_state.respostas_submetidas["q2"] = "errado"
-                st.rerun()
+                    st.rerun()
 
-        # --- QUESTÃO 3 ---
+        # --- QUESTÃO 3 (Múltipla Escolha em Caixas Lado a Lado) ---
         status_q3 = st.session_state.respostas_submetidas.get("q3", None)
         if status_q3 == "correto":
-            st.markdown('<div class="ex-card-correct">3. How old are you? – I ___ 15.<br><b>Resposta escolhida: am</b><br>✅ <b>Isso!</b> Idade usa be: I am 15.</div>', unsafe_allow_html=True)
+            st.markdown('<div class="ex-card-correct">3. How old are you? – I ___ 15.<br><br>✅ <b>Isso!</b> Idade usa be: I am 15.</div>', unsafe_allow_html=True)
         elif status_q3 == "errado":
-            st.markdown('<div class="ex-card-wrong">3. How old are you? – I ___ 15.<br>❌ <b>Ainda não.</b> Lembre-se que idade em inglês usa o verbo <i>to be</i> (am).</div>', unsafe_allow_html=True)
+            st.markdown('<div class="ex-card-wrong">3. How old are you? – I ___ 15.<br><br>❌ <b>Ainda não.</b> A resposta certa é <b>am</b>.</div>', unsafe_allow_html=True)
         else:
             st.markdown('<div class="ex-card-neutral">3. How old are you? – I ___ 15.</div>', unsafe_allow_html=True)
-            r3 = st.radio("Escolha a opção para a Q3:", ["have", "am", "is"], key="input_q3", label_visibility="collapsed")
-            if st.button("Conferir Q3"):
-                if r3 == "am":
+            bc1, bc2, bc3 = st.columns([1, 1, 1])
+            with bc1:
+                if st.button("have", key="btn_q3_have", use_container_width=True):
+                    st.session_state.respostas_submetidas["q3"] = "errado"
+                    st.rerun()
+            with bc2:
+                if st.button("am", key="btn_q3_am", use_container_width=True):
                     st.session_state.respostas_submetidas["q3"] = "correto"
                     atualizar_progresso_no_sheets(st.session_state.usuario, xp_add=10, gems_add=2)
-                else:
+                    st.rerun()
+            with bc3:
+                if st.button("is", key="btn_q3_is", use_container_width=True):
                     st.session_state.respostas_submetidas["q3"] = "errado"
-                st.rerun()
+                    st.rerun()
 
-        # --- QUESTÃO 4 (Preenchimento / Input) ---
+        # --- QUESTÃO 4 (Dissertativa / Preenchimento) ---
         status_q4 = st.session_state.respostas_submetidas.get("q4", None)
         if status_q4 == "correto":
-            st.markdown('<div class="ex-card-correct">4. Lucas <b>is</b> (be) my cousin.<br>✅ <b>Correto!</b> He → is.</div>', unsafe_allow_html=True)
+            st.markdown('<div class="ex-card-correct">4. Lucas <b>is</b> (be) my cousin.<br><br>✅ <b>Correto!</b> He → is.</div>', unsafe_allow_html=True)
         elif status_q4 == "errado":
-            st.markdown('<div class="ex-card-wrong">4. Lucas _________ (be) my cousin.<br>❌ <b>Incorreto.</b> A resposta correta era <b>is</b>.</div>', unsafe_allow_html=True)
+            st.markdown('<div class="ex-card-wrong">4. Lucas _________ (be) my cousin.<br><br>❌ <b>Ainda não.</b> Tente de novo ou clique em "Ver resposta". A parte correta é <b>is</b>.</div>', unsafe_allow_html=True)
         else:
             st.markdown('<div class="ex-card-neutral">4. Lucas _______________ (be) my cousin.</div>', unsafe_allow_html=True)
-            txt_q4 = st.text_input("Digite a sua resposta para a Q4 (ex: is, am, are):", key="txt_q4")
-            c_col1, c_col2 = st.columns(2)
+            txt_q4 = st.text_input("Escreva sua resposta para a Q4:", key="txt_q4", label_visibility="collapsed")
+            c_col1, c_col2 = st.columns([1, 1])
             with c_col1:
-                if st.button("Conferir Q4"):
+                if st.button("Conferir", key="conf_q4"):
                     if txt_q4.strip().lower() == "is":
                         st.session_state.respostas_submetidas["q4"] = "correto"
                         atualizar_progresso_no_sheets(st.session_state.usuario, xp_add=10, gems_add=2)
@@ -661,21 +680,21 @@ elif pagina == "skills":
                         st.session_state.respostas_submetidas["q4"] = "errado"
                     st.rerun()
             with c_col2:
-                if st.button("Ver resposta Q4"):
+                if st.button("Ver resposta", key="resp_q4"):
                     st.info("Resposta correta: **is**")
 
-        # --- QUESTÃO 5 (Preenchimento / Input) ---
+        # --- QUESTÃO 5 (Dissertativa / Preenchimento) ---
         status_q5 = st.session_state.respostas_submetidas.get("q5", None)
         if status_q5 == "correto":
-            st.markdown('<div class="ex-card-correct">5. I <b>am not</b> (not / be) from São Paulo.<br>✅ <b>Correto!</b></div>', unsafe_allow_html=True)
+            st.markdown('<div class="ex-card-correct">5. I <b>am not</b> (not / be) from São Paulo.<br><br>✅ <b>Correto!</b></div>', unsafe_allow_html=True)
         elif status_q5 == "errado":
-            st.markdown('<div class="ex-card-wrong">5. I _________ (not / be) from São Paulo.<br>❌ <b>Ainda não.</b> A resposta correta era <b>am not</b>.</div>', unsafe_allow_html=True)
+            st.markdown('<div class="ex-card-wrong">5. I _________ (not / be) from São Paulo.<br><br>❌ <b>Ainda não.</b> Tente de novo ou clique em "Ver resposta". A parte correta é <b>am not</b>.</div>', unsafe_allow_html=True)
         else:
             st.markdown('<div class="ex-card-neutral">5. I _______________ (not / be) from São Paulo.</div>', unsafe_allow_html=True)
-            txt_q5 = st.text_input("Digite a sua resposta para a Q5 (ex: am not, aren't):", key="txt_q5")
-            c_col1, c_col2 = st.columns(2)
+            txt_q5 = st.text_input("Escreva sua resposta para a Q5:", key="txt_q5", label_visibility="collapsed")
+            c_col1, c_col2 = st.columns([1, 1])
             with c_col1:
-                if st.button("Conferir Q5"):
+                if st.button("Conferir", key="conf_q5"):
                     if txt_q5.strip().lower() in ["am not", "im not", "i'm not"]:
                         st.session_state.respostas_submetidas["q5"] = "correto"
                         atualizar_progresso_no_sheets(st.session_state.usuario, xp_add=10, gems_add=2)
@@ -683,7 +702,7 @@ elif pagina == "skills":
                         st.session_state.respostas_submetidas["q5"] = "errado"
                     st.rerun()
             with c_col2:
-                if st.button("Ver resposta Q5"):
+                if st.button("Ver resposta", key="resp_q5"):
                     st.info("Resposta correta: **am not** (ou **I'm not**)")
 
     # ================= LISTA DA TRILHA DE APRENDIZADO =================
