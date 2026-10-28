@@ -73,27 +73,10 @@ st.markdown("""
             box-shadow: 0 3px 10px rgba(0,0,0,0.04);
             margin-bottom: 16px;
         }
-        .audio-action-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 32px;
-            height: 32px;
-            border-radius: 6px;
-            background-color: transparent;
-            border: 1px solid #e2e8f0;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            color: #4f67e8;
-        }
-        .audio-action-btn:hover {
-            background-color: #f1f5f9;
-            border-color: #cbd5e1;
-        }
     </style>
 """, unsafe_allow_html=True)
 
-# Script JavaScript global para síntese de voz nativa (Web Speech API)
+# Script JavaScript global para síntese de voz nativa do navegador
 st.markdown("""
     <script>
     function falar(texto) {
@@ -228,7 +211,7 @@ def realizar_login(usuario_input, senha_input):
     if usr_key in usuarios:
         dados = usuarios[usr_key]
         if dados["ativo"] != "SIM":
-            st.error("Usuário inativo. Solicite liberação.")
+            st.error("Utilizador inativo. Solicite liberação.")
         elif dados["senha"] == senha_input.strip():
             st.session_state.autenticado = True
             st.session_state.usuario = usr_key
@@ -237,9 +220,9 @@ def realizar_login(usuario_input, senha_input):
             st.session_state.pagina_atual = "dashboard"
             st.rerun()
         else:
-            st.error("Senha incorreta.")
+            st.error("Palavra-passe incorreta.")
     else:
-        st.error("Usuário não encontrado.")
+        st.error("Utilizador não encontrado.")
 
 def realizar_logout():
     st.session_state.autenticado = False
@@ -262,16 +245,16 @@ if not st.session_state.autenticado:
         st.markdown("<br><br>", unsafe_allow_html=True)
         with st.form("login_form"):
             st.title("💜 CarolEnglish")
-            st.caption("Faça login para acessar sua plataforma")
+            st.caption("Faça login para aceder à sua plataforma")
             st.divider()
 
-            usuario_input = st.text_input("Usuário")
-            senha_input = st.text_input("Senha", type="password")
+            usuario_input = st.text_input("Utilizador")
+            senha_input = st.text_input("Palavra-passe", type="password")
             btn_entrar = st.form_submit_button("Entrar", type="primary", use_container_width=True)
 
         if btn_entrar:
             if not usuario_input or not senha_input:
-                st.warning("Preencha usuário e senha.")
+                st.warning("Preencha o utilizador e a palavra-passe.")
             else:
                 realizar_login(usuario_input, senha_input)
     st.stop()
@@ -318,7 +301,7 @@ if pagina == "dashboard":
     st.markdown(f"""
         <div class="welcome-banner">
             <h2>Dashboard · Bem-vindo(a), {st.session_state.nome}!</h2>
-            <p style="margin: 0; opacity: 0.9;">Continue mantendo sua sequência de estudos em dia ✨</p>
+            <p style="margin: 0; opacity: 0.9;">Continue a manter a sua sequência de estudos em dia ✨</p>
         </div>
     """, unsafe_allow_html=True)
 
@@ -336,7 +319,7 @@ if pagina == "dashboard":
     st.subheader("⚡ Ações Rápidas de Estudo")
     if st.button("✅ Concluir Lição de Exemplo (+50 XP e +10 Gems)"):
         atualizar_progresso_no_sheets(st.session_state.usuario, xp_add=50, gems_add=10, licoes_add=1)
-        st.success("Parabéns! Sua atividade foi registrada e salva no Google Sheets com sucesso!")
+        st.success("Parabéns! A sua atividade foi registada e salva no Google Sheets com sucesso!")
         st.rerun()
 
 elif pagina == "skills":
@@ -414,7 +397,7 @@ elif pagina == "verbs":
                 
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <h3 style="margin:0; color:#1e293b;">{inf}</h3>
-                    <button class="audio-action-btn" onclick="falar('{inf}')" title="Ouvir pronúncia: {inf}">{icon_svg}</button>
+                    <button style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 6px; background-color: transparent; border: 1px solid #e2e8f0; cursor: pointer; color: #4f67e8;" onclick="falar('{inf}')" title="Ouvir pronúncia: {inf}">{icon_svg}</button>
                 </div>
                 
                 <p style="color:#64748b; font-size:13px; margin:2px 0 0 0;">{fon}</p>
@@ -425,7 +408,7 @@ elif pagina == "verbs":
                         <b>Past Simple:</b><br>
                         <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
                             <span style="color:#4f67e8; font-weight:600;">{past}</span>
-                            <button class="audio-action-btn" style="width: 26px; height: 26px;" onclick="falar('{past}')" title="Ouvir pronúncia: {past}">{icon_svg}</button>
+                            <button style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 6px; background-color: transparent; border: 1px solid #e2e8f0; cursor: pointer; color: #4f67e8;" onclick="falar('{past}')" title="Ouvir pronúncia: {past}">{icon_svg}</button>
                         </div>
                         <span style="color:#94a3b8; font-size:11px;">{past_fon}</span>
                     </div>
@@ -433,7 +416,7 @@ elif pagina == "verbs":
                         <b>Past Participle:</b><br>
                         <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
                             <span style="color:#4f67e8; font-weight:600;">{part}</span>
-                            <button class="audio-action-btn" style="width: 26px; height: 26px;" onclick="falar('{part}')" title="Ouvir pronúncia: {part}">{icon_svg}</button>
+                            <button style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 6px; background-color: transparent; border: 1px solid #e2e8f0; cursor: pointer; color: #4f67e8;" onclick="falar('{part}')" title="Ouvir pronúncia: {part}">{icon_svg}</button>
                         </div>
                         <span style="color:#94a3b8; font-size:11px;">{part_fon}</span>
                     </div>
