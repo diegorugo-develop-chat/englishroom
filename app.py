@@ -73,16 +73,42 @@ st.markdown("""
             box-shadow: 0 3px 10px rgba(0,0,0,0.04);
             margin-bottom: 16px;
         }
-        .tag-badge {
-            background-color: #fdf2f8;
-            color: #db2777;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            float: right;
+        .verb-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 16px;
+            border: 1px solid #eaeaea;
+        }
+        .audio-btn {
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            display: inline-block;
+            transition: transform 0.1s ease;
+        }
+        .audio-btn:active {
+            transform: scale(1.2);
         }
     </style>
+""", unsafe_allow_html=True)
+
+# Script global para sintetizador de voz do navegador (Text-to-Speech)
+st.markdown("""
+    <script>
+    function speakText(text) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel(); // Cancela falas anteriores
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.9;
+            window.speechSynthesis.speak(utterance);
+        } else {
+            alert('Seu navegador não suporta reprodução de áudio nativa.');
+        }
+    }
+    </script>
 """, unsafe_allow_html=True)
 
 # ======================= CONEXÃO COM O GOOGLE SHEETS =======================
@@ -373,49 +399,39 @@ elif pagina == "verbs":
     if verbos_filtrados:
         cols = st.columns(3)
         for i, verb in enumerate(verbos_filtrados):
-            inf = str(verb.get("infinitive", ""))
+            inf = str(verb.get("infinitive", "")).replace("'", "\\'")
             fon = str(verb.get("phonetic", ""))
-            past = str(verb.get("past", ""))
+            past = str(verb.get("past", "")).replace("'", "\\'")
             past_fon = str(verb.get("past_phonetic", ""))
-            part = str(verb.get("participle", ""))
+            part = str(verb.get("participle", "")).replace("'", "\\'")
             part_fon = str(verb.get("part_phonetic", ""))
             trans = str(verb.get("translation", ""))
             ex = str(verb.get("example", ""))
             pat = str(verb.get("pattern", ""))
 
-            # URLs de áudio direto via Google Text-to-Speech
-            url_inf = f"https://translate.google.com/translate_tts?ie=UTF-8&q={inf}&tl=en&client=tw-ob"
-            url_past = f"https://translate.google.com/translate_tts?ie=UTF-8&q={past}&tl=en&client=tw-ob"
-            url_part = f"https://translate.google.com/translate_tts?ie=UTF-8&q={part}&tl=en&client=tw-ob"
-
             card_html = f"""
-            <div style="background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 16px; border: 1px solid #eaeaea;">
+            <div class="verb-card">
                 <span style="background-color: #fdf2f8; color: #db2777; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; float: right;">{pat}</span>
-                
                 <h3 style="margin:0; color:#1e293b; display: flex; align-items: center; gap: 8px;">
                     {inf} 
-                    <audio id="audio_{inf}_{i}" src="{url_inf}"></audio>
-                    <span style="cursor:pointer; font-size:16px;" onclick="document.getElementById('audio_{inf}_{i}').play()">🔊</span>
+                    <span class="audio-btn" onclick="speakText('{inf}')" title="Ouvir pronúncia">🔊</span>
                 </h3>
-                
                 <p style="color:#64748b; font-size:13px; margin:2px 0 0 0;">{fon}</p>
                 <hr style="margin:10px 0; border-top:1px solid #f1f5f9;">
-                
                 <div style="display:flex; justify-content:space-between; font-size:13px;">
                     <div>
                         <b>Past Simple:</b><br>
-                        <audio id="audio_past_{inf}_{i}" src="{url_past}"></audio>
-                        <span style="cursor:pointer; color:#4f67e8;" onclick="document.getElementById('audio_past_{inf}_{i}').play()">{past} 🔊</span><br>
+                        <span style="color:#4f67e8;">{past}</span> 
+                        <span class="audio-btn" onclick="speakText('{past}')" title="Ouvir pronúncia">🔊</span><br>
                         <span style="color:#94a3b8; font-size:11px;">{past_fon}</span>
                     </div>
                     <div>
                         <b>Past Participle:</b><br>
-                        <audio id="audio_part_{inf}_{i}" src="{url_part}"></audio>
-                        <span style="cursor:pointer; color:#4f67e8;" onclick="document.getElementById('audio_part_{inf}_{i}').play()">{part} 🔊</span><br>
+                        <span style="color:#4f67e8;">{part}</span> 
+                        <span class="audio-btn" onclick="speakText('{part}')" title="Ouvir pronúncia">🔊</span><br>
                         <span style="color:#94a3b8; font-size:11px;">{part_fon}</span>
                     </div>
                 </div>
-                
                 <p style="margin:12px 0 4px 0; font-size:13px;"><b>Tradução:</b> {trans}</p>
                 <p style="margin:0; font-size:12px; color:#64748b; font-style:italic;">Exemplo: {ex}</p>
             </div>
