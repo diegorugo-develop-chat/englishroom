@@ -8,7 +8,7 @@ PLANILHA_ID = "1AhC0DeQFA1tQyrT3ldvDun_jy2DC-Dur3WF_yOBf4qQ"
 NOME_ABA_USUARIOS = "usuarios"
 
 st.set_page_config(
-    page_title="Yorésilient — Dashboard",
+    page_title="CarolEnglish — Dashboard",
     page_icon="💜",
     layout="wide"
 )
@@ -161,7 +161,7 @@ if not st.session_state.autenticado:
     with col2:
         st.markdown("<br><br>", unsafe_allow_html=True)
         with st.form("login_form"):
-            st.title("💜 Yorésilient")
+            st.title("💜 CarolEnglish")
             st.caption("Faça login para acessar sua plataforma")
             st.divider()
 
@@ -181,7 +181,7 @@ if not st.session_state.autenticado:
 
 # --- MENU LATERAL (SIDEBAR) ---
 with st.sidebar:
-    st.markdown("## 💜 Yorésilient")
+    st.markdown("## 💜 CarolEnglish")
     st.caption(f"Logado como: **{st.session_state.nome}**")
     st.divider()
 
@@ -190,4 +190,65 @@ with st.sidebar:
         st.session_state.pagina_atual = "dashboard"
         st.rerun()
 
-    # Exibe aba
+    # Exibe aba de Consulta apenas se autorizado na planilha
+    if st.session_state.permissoes.get("consulta") == "SIM":
+        if st.button("🔎 Consulta de Equipamentos", use_container_width=True, type="primary" if st.session_state.pagina_atual == "consulta" else "secondary"):
+            st.session_state.pagina_atual = "consulta"
+            st.rerun()
+
+    # Exibe aba de Casos apenas se autorizado na planilha
+    if st.session_state.permissoes.get("casos") == "SIM":
+        if st.button("📋 Casos em Andamento", use_container_width=True, type="primary" if st.session_state.pagina_atual == "casos" else "secondary"):
+            st.session_state.pagina_atual = "casos"
+            st.rerun()
+
+    st.markdown("<br><br><br>", unsafe_allow_html=True)
+    if st.button("🚪 Sair / Logout", type="secondary", use_container_width=True):
+        realizar_logout()
+
+
+# --- CORTE DE PÁGINAS COM BASE NA NAVEGAÇÃO ---
+pagina = st.session_state.pagina_atual
+
+if pagina == "dashboard":
+    # Banner de boas-vindas
+    st.markdown(f"""
+        <div class="welcome-banner">
+            <h1>Olá, {st.session_state.nome}!</h1>
+            <p style="margin: 0; opacity: 0.9;">Let's study! ✨</p>
+        </div>
+    """, unsafe_allow_html=True)
+
+    # Cards superiores de resumo (Exemplo de métricas)
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.markdown('<div class="metric-card"><h3>🔥 Sequência</h3><p style="font-size: 24px; font-weight: bold; color: #6b215a;">1 dia</p></div>', unsafe_allow_html=True)
+    with col2:
+        st.markdown('<div class="metric-card"><h3>🏆 Recorde</h3><p style="font-size: 24px; font-weight: bold; color: #6b215a;">1</p></div>', unsafe_allow_html=True)
+    with col3:
+        st.markdown('<div class="metric-card"><h3>⚡ XP Total</h3><p style="font-size: 24px; font-weight: bold; color: #6b215a;">385 XP</p></div>', unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # Seção de atalhos rápidos / botões interativos centrais
+    c_btn1, c_btn2 = st.columns(2)
+    with c_btn1:
+        if st.button("🏆 Ver Progresso e XP", use_container_width=True):
+            st.toast("Funcionalidade em desenvolvimento!")
+    with c_btn2:
+        if st.button("📝 Minhas Anotações", use_container_width=True):
+            st.toast("Funcionalidade em desenvolvimento!")
+
+elif pagina == "consulta":
+    if st.session_state.permissoes.get("consulta") != "SIM":
+        st.error("⛔ Você não tem permissão para acessar esta página.")
+        st.stop()
+    st.title("🔎 Consulta de Equipamentos")
+    st.info("Insira os filtros de busca desejados.")
+
+elif pagina == "casos":
+    if st.session_state.permissoes.get("casos") != "SIM":
+        st.error("⛔ Você não tem permissão para acessar esta página.")
+        st.stop()
+    st.title("📋 Casos em Andamento")
+    st.info("Acompanhamento operacional de chamados e manutenções.")
