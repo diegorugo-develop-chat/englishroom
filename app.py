@@ -381,23 +381,33 @@ elif pagina == "verbs":
             with cols[i % 3]:
                 with st.container(border=True):
                     st.markdown(f"**Padrão:** `{pat}`")
-                    st.markdown(f"### {inf}")
-                    st.caption(fon)
-                    st.audio(url_inf, format="audio/mp3")
                     
+                    # Linha do Infinitivo com botão discreto de áudio
+                    c_inf1, c_inf2 = st.columns([4, 1])
+                    with c_inf1:
+                        st.markdown(f"### {inf}")
+                    with c_inf2:
+                        if st.button("🔊", key=f"btn_inf_{i}"):
+                            st.audio(url_inf, format="audio/mp3", autoplay=True)
+                            
+                    st.caption(fon)
                     st.divider()
                     
+                    # Past Simple e Past Participle
                     col_p1, col_p2 = st.columns(2)
                     with col_p1:
                         st.markdown("**Past Simple:**")
                         st.write(past)
                         st.caption(past_fon)
-                        st.audio(url_past, format="audio/mp3")
+                        if st.button("🔊 Ouvir", key=f"btn_past_{i}"):
+                            st.audio(url_past, format="audio/mp3", autoplay=True)
+                            
                     with col_p2:
                         st.markdown("**Past Participle:**")
                         st.write(part)
                         st.caption(part_fon)
-                        st.audio(url_part, format="audio/mp3")
+                        if st.button("🔊 Ouvir", key=f"btn_part_{i}"):
+                            st.audio(url_part, format="audio/mp3", autoplay=True)
                         
                     st.divider()
                     st.markdown(f"**Tradução:** {trans}")
