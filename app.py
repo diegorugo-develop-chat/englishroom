@@ -77,6 +77,21 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# Script global para síntese de voz nativa do navegador
+st.markdown("""
+    <script>
+    function falar(texto) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(texto);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.9;
+            window.speechSynthesis.speak(utterance);
+        }
+    }
+    </script>
+""", unsafe_allow_html=True)
+
 # ======================= CONEXÃO COM O GOOGLE SHEETS =======================
 @st.cache_resource
 def conectar_google_sheets():
@@ -189,6 +204,7 @@ if "autenticado" not in st.session_state:
     st.session_state.nome = None
     st.session_state.niveis = {}
     st.session_state.pagina_atual = "dashboard"
+    st.session_state.topico_selecionado = None
 
 def realizar_login(usuario_input, senha_input):
     usuarios = buscar_usuarios()
@@ -261,18 +277,22 @@ with st.sidebar:
 
     if st.button("📊 Dashboard", use_container_width=True, type="primary" if st.session_state.pagina_atual == "dashboard" else "secondary"):
         st.session_state.pagina_atual = "dashboard"
+        st.session_state.topico_selecionado = None
         st.rerun()
 
     if st.button("🚀 Skills / Trilha", use_container_width=True, type="primary" if st.session_state.pagina_atual == "skills" else "secondary"):
         st.session_state.pagina_atual = "skills"
+        st.session_state.topico_selecionado = None
         st.rerun()
 
     if st.button("🔄 Verbos Irregulares", use_container_width=True, type="primary" if st.session_state.pagina_atual == "verbs" else "secondary"):
         st.session_state.pagina_atual = "verbs"
+        st.session_state.topico_selecionado = None
         st.rerun()
 
     if st.button("💬 Practice & AI", use_container_width=True, type="primary" if st.session_state.pagina_atual == "practice" else "secondary"):
         st.session_state.pagina_atual = "practice"
+        st.session_state.topico_selecionado = None
         st.rerun()
 
     st.markdown("<br><br><br>", unsafe_allow_html=True)
@@ -309,13 +329,172 @@ if pagina == "dashboard":
         st.rerun()
 
 elif pagina == "skills":
-    st.title("🚀 Skills & Trilha de Aprendizado")
-    if st.session_state.niveis.get("A1") == "SIM":
-        st.markdown('<div class="content-card"><h4>📖 Módulo Iniciante (Nível A1)</h4><p>Conteúdos básicos liberados para o seu aprendizado.</p></div>', unsafe_allow_html=True)
-    if st.session_state.niveis.get("A2") == "SIM":
-        st.markdown('<div class="content-card"><h4>📖 Módulo Elementar (Nível A2)</h4><p>Estruturas e vocabulário intermediário inicial.</p></div>', unsafe_allow_html=True)
-    if st.session_state.niveis.get("B1") == "SIM":
-        st.markdown('<div class="content-card"><h4>📖 Módulo Intermediário (Nível B1)</h4><p>Conversação fluida e gramática.</p></div>', unsafe_allow_html=True)
+    # Dados estruturados da Trilha de Aprendizado (A1 a B2 baseados na referência)
+    trilha_dados = {
+        "A1": {
+            "titulo": "A1 · Iniciante",
+            "topicos": [
+                {"nome": "Verb to be", "sub": "am / is / are", "status": "em_andamento"},
+                {"nome": "Subject & object pronouns", "sub": "I / me, she / her...", "status": "nao_comecou"},
+                {"nome": "Possessives", "sub": "my, your, 's", "status": "nao_comecou"},
+                {"nome": "Present simple", "sub": "rotinas, gostos e fatos", "status": "nao_comecou"},
+                {"nome": "Present continuous", "sub": "o que está acontecendo agora", "status": "completo"},
+                {"nome": "There is / there are", "sub": "existe, há, tem", "status": "em_andamento"},
+                {"nome": "Articles a / an / the", "sub": "um, uma, o, a", "status": "em_andamento"},
+                {"nome": "Plural nouns", "sub": "cats, boxes, children", "status": "em_andamento"},
+                {"nome": "Can / can't", "sub": "habilidade, permissão e pedidos", "status": "nao_comecou"},
+                {"nome": "Imperatives & Let's", "sub": "ordens, instruções e sugestões", "status": "nao_comecou"},
+                {"nome": "Prepositions of time", "sub": "in / on / at", "status": "nao_comecou"},
+                {"nome": "Prepositions of place", "sub": "in, on, under, next to...", "status": "nao_comecou"},
+                {"nome": "Adverbs of frequency", "sub": "always, usually, never...", "status": "nao_comecou"},
+                {"nome": "This / that / these / those", "sub": "este, esse, aquele", "status": "nao_comecou"},
+                {"nome": "Question words", "sub": "what, where, when, why...", "status": "nao_comecou"}
+            ]
+        },
+        "A2": {
+            "titulo": "A2 · Básico",
+            "topicos": [
+                {"nome": "Was / were", "sub": "o passado do verb to be", "status": "nao_comecou"},
+                {"nome": "Past simple", "sub": "ações terminadas no passado", "status": "nao_comecou"},
+                {"nome": "Past continuous", "sub": "o que estava acontecendo", "status": "nao_comecou"},
+                {"nome": "Comparatives & superlatives", "sub": "bigger, the biggest", "status": "nao_comecou"},
+                {"nome": "Countable & uncountable", "sub": "some, any, much, many", "status": "nao_comecou"},
+                {"nome": "Be going to", "sub": "planos e previsões com evidência", "status": "nao_comecou"},
+                {"nome": "Will", "sub": "previsões, decisões na hora e promessas", "status": "nao_comecou"},
+                {"nome": "Present perfect (experiences)", "sub": "ever, never, already, yet, just", "status": "nao_comecou"},
+                {"nome": "Must / have to", "sub": "obrigação e proibição", "status": "nao_comecou"},
+                {"nome": "Should", "sub": "conselhos e opiniões", "status": "nao_comecou"},
+                {"nome": "Like / love / want + verb", "sub": "-ing ou to?", "status": "nao_comecou"},
+                {"nome": "Too / enough", "sub": "demais, suficiente", "status": "nao_comecou"},
+                {"nome": "Adverbs of manner", "sub": "quickly, carefully, well", "status": "nao_comecou"}
+            ]
+        },
+        "B1": {
+            "titulo": "B1 · Intermediário",
+            "topicos": [
+                {"nome": "Present perfect vs past simple", "sub": "quando usar cada um", "status": "nao_comecou"},
+                {"nome": "Present perfect continuous", "sub": "for & since, how long", "status": "nao_comecou"},
+                {"nome": "Used to", "sub": "hábitos do passado", "status": "nao_comecou"},
+                {"nome": "Past perfect", "sub": "o passado do passado", "status": "nao_comecou"},
+                {"nome": "Future forms", "sub": "will, going to ou present continuous?", "status": "nao_comecou"},
+                {"nome": "Zero & first conditional", "sub": "fatos e futuro possível", "status": "nao_comecou"},
+                {"nome": "Second conditional", "sub": "situações imaginárias", "status": "nao_comecou"},
+                {"nome": "Passive voice (present & past)", "sub": "is made, was built", "status": "nao_comecou"},
+                {"nome": "Defining relative clauses", "sub": "who, which, that, where, whose", "status": "nao_comecou"},
+                {"nome": "Reported speech", "sub": "said that, told me", "status": "nao_comecou"},
+                {"nome": "Gerunds & infinitives", "sub": "-ing ou to + verbo?", "status": "nao_comecou"},
+                {"nome": "Modals of deduction", "sub": "must, might, can't", "status": "nao_comecou"},
+                {"nome": "Question tags", "sub": "..., isn't it?, don't you?", "status": "nao_comecou"},
+                {"nome": "So / such", "sub": "tão, tanto", "status": "nao_comecou"}
+            ]
+        },
+        "B2": {
+            "titulo": "B2 · Intermediário Superior",
+            "topicos": [
+                {"nome": "Third & mixed conditionals", "sub": "o passado que não aconteceu", "status": "nao_comecou"},
+                {"nome": "Should have / could have", "sub": "arrependimentos e críticas", "status": "nao_comecou"},
+                {"nome": "Wish / if only", "sub": "desejos e arrependimentos", "status": "nao_comecou"},
+                {"nome": "Advanced passive", "sub": "todos os tempos e modais", "status": "nao_comecou"},
+                {"nome": "Have / get something done", "sub": "pedir para alguém fazer", "status": "nao_comecou"},
+                {"nome": "Reported questions & commands", "sub": "asked if, told me to", "status": "nao_comecou"},
+                {"nome": "Non-defining relative clauses", "sub": "informação extra entre vírgulas", "status": "nao_comecou"},
+                {"nome": "Past modals of deduction", "sub": "must have, can't have", "status": "nao_comecou"},
+                {"nome": "Future continuous & perfect", "sub": "will be doing, will have done", "status": "nao_comecou"},
+                {"nome": "Used to / be used to / get used to", "sub": "hábito antigo x estar acostumada", "status": "nao_comecou"},
+                {"nome": "Linking words of contrast", "sub": "although, despite, however", "status": "nao_comecou"},
+                {"nome": "Participle clauses", "sub": "Walking home, I saw...", "status": "nao_comecou"}
+            ]
+        }
+    }
+
+    # Se o utilizador clicou num tópico específico, mostra a lição/explicação e exercícios
+    if st.session_state.get("topico_selecionado"):
+        topico = st.session_state.topico_selecionado
+        if st.button("⬅️ Voltar para a Trilha de Aprendizado"):
+            st.session_state.topico_selecionado = None
+            st.rerun()
+
+        st.markdown(f"## 📖 Módulo de Estudo: **{topico}**")
+        st.markdown("---")
+
+        # Exemplo de conteúdo didático e interativo para o tópico
+        st.markdown("### 📝 Explicação Teórica")
+        st.write(f"Aqui você aprenderá todas as regras, estrutura e exemplos práticos sobre **{topico}**. Esta lição foi desenvolvida para acelerar a sua fluência com explicações claras em português e áudios nativos.")
+
+        st.info("💡 **Dica de Ouro:** Ouça os exemplos em áudio e repita em voz alta para treinar a sua pronúncia.")
+
+        st.markdown("---")
+        st.markdown("### ✍️ Mini Quiz / Exercício Prático")
+        
+        # Exemplo de questão interativa
+        st.write(f"**Pergunta 1:** Como se aplica corretamente a estrutura de **{topico}** numa frase afirmativa?")
+        resposta = st.radio("Escolha a alternativa correta:", [
+            "Opção A: Estrutura direta com o verbo principal.",
+            "Opção B: Inversão do sujeito com o auxiliar.",
+            "Opção C: Uso exclusivo no tempo passado contínuo."
+        ], key=f"quiz_{topico}")
+
+        if st.button("Enviar Resposta 🚀"):
+            if "Opção A" in resposta:
+                st.success("🎉 Resposta correta! Ganhou +20 XP e +5 Gems!")
+                atualizar_progresso_no_sheets(st.session_state.usuario, xp_add=20, gems_add=5)
+            else:
+                st.error("❌ Resposta incorreta. Reveja a explicação teórica acima e tente novamente!")
+
+    else:
+        st.title("🚀 Skills & Trilha de Aprendizado")
+        st.caption("Selecione qualquer tópico abaixo para abrir a explicação teórica e os exercícios interativos.")
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # Legenda de Status
+        st.markdown("""
+            <div style="display: flex; gap: 20px; font-size: 14px; color: #5c6b73; margin-bottom: 20px;">
+                <div>⚪ <b>Não começou</b></div>
+                <div>🟡 <b>Em andamento</b></div>
+                <div>🟢 <b>Completo</b></div>
+            </div>
+        """, unsafe_allow_html=True)
+
+        # Abas para cada Nível (A1, A2, B1, B2)
+        abas = st.tabs(["A1 · Iniciante", "A2 · Básico", "B1 · Intermediário", "B2 · Intermediário Superior"])
+
+        for idx, (nivel_key, dados_nivel) in enumerate(trilha_dados.items()):
+            with abas[idx]:
+                st.markdown(f"### {dados_nivel['titulo']}")
+                st.markdown(f"<p style='color: #64748b;'>Progresso do módulo</p>", unsafe_allow_html=True)
+                
+                topicos = dados_nivel["topicos"]
+                cols = st.columns(3)
+                
+                for t_idx, topico in enumerate(topicos):
+                    nome = topico["nome"]
+                    sub = topico["sub"]
+                    status = topico["status"]
+                    
+                    # Ícone correspondente ao status
+                    if status == "completo":
+                        icone_status = "🟢"
+                    elif status == "em_andamento":
+                        icone_status = "🟡"
+                    else:
+                        icone_status = "⚪"
+
+                    card_html = f"""
+                    <div style="background: white; border-radius: 14px; padding: 16px; box-shadow: 0 3px 10px rgba(0,0,0,0.04); border: 1px solid #eaeaea; height: 110px; margin-bottom: 14px;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                            <span style="font-size: 16px;">{icone_status}</span>
+                            <b style="color: #1e293b; font-size: 14px;">{nome}</b>
+                        </div>
+                        <p style="color: #64748b; font-size: 12px; margin: 0; padding-left: 24px;">{sub}</p>
+                    </div>
+                    """
+                    
+                    with cols[t_idx % 3]:
+                        components.html(card_html, height=130, scrolling=False)
+                        # Botão interativo do Streamlit logo abaixo do card para abrir a lição
+                        if st.button(f"Estudar ➔", key=f"btn_{nivel_key}_{t_idx}"):
+                            st.session_state.topico_selecionado = nome
+                            st.rerun()
 
 elif pagina == "verbs":
     st.title("Irregular Verbs")
