@@ -15,7 +15,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# ======================= ESTILOS CSS (MODERN LEARNIQ) =======================
+# ======================= ESTILOS CSS =======================
 st.markdown("""
     <style>
         .stApp {
@@ -108,7 +108,16 @@ def buscar_usuarios():
                 usuarios_dict[usr] = {
                     "senha": str(reg.get("senha", "")).strip(),
                     "nome": str(reg.get("nome", "")).strip(),
-                    "ativo": str(reg.get("ativo", "NAO")).strip().upper()
+                    "ativo": str(reg.get("ativo", "SIM")).strip().upper(),
+                    # Capturando os níveis de acesso (A1, A2, B1, B2, C1, C2)
+                    "niveis": {
+                        "A1": str(reg.get("A1", "NAO")).strip().upper(),
+                        "A2": str(reg.get("A2", "NAO")).strip().upper(),
+                        "B1": str(reg.get("B1", "NAO")).strip().upper(),
+                        "B2": str(reg.get("B2", "NAO")).strip().upper(),
+                        "C1": str(reg.get("C1", "NAO")).strip().upper(),
+                        "C2": str(reg.get("C2", "NAO")).strip().upper(),
+                    }
                 }
         return usuarios_dict
     except Exception as e:
@@ -116,7 +125,6 @@ def buscar_usuarios():
         return {}
 
 def carregar_progresso_usuario(usuario):
-    """Busca os dados de progresso do aluno na aba 'progresso' do Sheets. Se não existir, cria uma linha padrão."""
     sh = conectar_google_sheets()
     if not sh:
         return {"xp": 0, "streak": 0, "gems": 0, "licoes_concluidas": 0}
@@ -135,18 +143,15 @@ def carregar_progresso_usuario(usuario):
                     "licoes_concluidas": int(reg.get("licoes_concluidas") or 0)
                 }
         
-        # Se o usuário não tiver registro na aba progresso, cria um novo
         hoje = datetime.now().strftime("%d/%m/%Y")
         nova_linha = [usuario.lower(), 100, 1, 50, 1, hoje]
         sheet.append_row(nova_linha)
         return {"linha": len(registros) + 2, "xp": 100, "streak": 1, "gems": 50, "licoes_concluidas": 1}
         
     except Exception as e:
-        st.warning(f"Aviso ao carregar progresso: {e}. Usando valores padrão.")
         return {"xp": 0, "streak": 0, "gems": 0, "licoes_concluidas": 0}
 
 def atualizar_progresso_no_sheets(usuario, xp_add=0, gems_add=0, licoes_add=0):
-    """Atualiza os valores somando o progresso atual do usuário na planilha."""
     sh = conectar_google_sheets()
     if not sh:
         return
@@ -167,13 +172,14 @@ def atualizar_progresso_no_sheets(usuario, xp_add=0, gems_add=0, licoes_add=0):
         
         st.cache_data.clear()
     except Exception as e:
-        st.error(f"Erro ao salvar progresso na planilha: {e}")
+        st.error(f"Erro ao salvar progresso: {e}")
 
 # ======================= CONTROLE DE SESSÃO =======================
 if "autenticado" not in st.session_state:
     st.session_state.autenticado = False
     st.session_state.usuario = None
     st.session_state.nome = None
+    st.session_state.niveis = {}
     st.session_state.pagina_atual = "dashboard"
 
 def realizar_login(usuario_input, senha_input):
@@ -188,6 +194,7 @@ def realizar_login(usuario_input, senha_input):
             st.session_state.autenticado = True
             st.session_state.usuario = usr_key
             st.session_state.nome = dados["nome"]
+            st.session_state.niveis = dados["niveis"]  # Salva os níveis permitidos (A1, A2, etc.)
             st.session_state.pagina_atual = "dashboard"
             st.rerun()
         else:
@@ -199,6 +206,7 @@ def realizar_logout():
     st.session_state.autenticado = False
     st.session_state.usuario = None
     st.session_state.nome = None
+    st.session_state.niveis = {}
     st.rerun()
 
 # ======================= TELA DE LOGIN =======================
@@ -238,6 +246,10 @@ dados_progresso = carregar_progresso_usuario(st.session_state.usuario)
 with st.sidebar:
     st.markdown("### 💜 CarolEnglish")
     st.caption(f"Aluno(a): **{st.session_state.nome}**")
+    
+    # Exibe os níveis liberados do aluno na barra lateral
+    niveis_ativos = [nv for nv, status in st.session_state.niveis.items() if status == "SIM"]
+    st.caption(f"Níveis Autorizados: **{', '.join(niveis_ativos) if niveis_ativos else 'Nenhum'}**")
     st.divider()
 
     if st.button("📊 Dashboard", use_container_width=True, type="primary" if st.session_state.pagina_atual == "dashboard" else "secondary"):
@@ -288,8 +300,26 @@ if pagina == "dashboard":
 
 elif pagina == "skills":
     st.title("🚀 Skills & Trilha de Aprendizado")
-    st.info("Aqui você acompanhará suas lições e módulos de inglês.")
+    
+    # Exemplo prático de como filtrar conteúdos por nível do aluno:
+    st.write("Aqui estão os módulos disponíveis para o seu perfil:")
+    
+    # Verificamos se o aluno tem acesso ao nível A1
+    if st.session_state.niveis.get("A1") == "SIM":
+        st.markdown('<div class="content-card"><h4>📖 Módulo Iniciante (Nível A1)</h4><p>Conteúdos básicos liberados para o seu aprendizado.</p></div>', unsafe_allow_html=True)
+        
+    # Verificamos se o aluno tem acesso ao nível A2
+    if st.session_state.niveis.get("A2") == "SIM":
+        st.markdown('<div class="content-card"><h4>📖 Módulo Elementar (Nível A2)</h4><p>Estruturas e vocabulário intermediário inicial.</p></div>', unsafe_allow_html=True)
+        
+    # Verificamos se o aluno tem acesso ao nível B1
+    if st.session_state.niveis.get("B1") == "SIM":
+        st.markdown('<div class="content-card"><h4>📖 Módulo Intermediário (Nível B1)</h4><p>Conversação fluida e gramática avançada.</p></div>', unsafe_allow_html=True)
+        
+    # Se o aluno não tiver nenhum nível liberado além desses básicos
+    if not any(st.session_state.niveis.get(nv) == "SIM" for nv in ["A1", "A2", "B1", "B2", "C1", "C2"]):
+        st.warning("Nenhum módulo liberado para o seu nível atual. Fale com o seu professor.")
 
 elif pagina == "practice":
     st.title("💬 Prática com Inteligência Artificial")
-    st.info("Inicie conversas e simulações para treinar conversação e escrita.")
+    st.info("Inicie conversas e simulações para treinar conversação e escrita de acordo com o seu nível.")
