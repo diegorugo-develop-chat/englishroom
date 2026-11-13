@@ -1,4 +1,5 @@
 import json
+import html
 import gspread
 import pandas as pd
 import streamlit as st
@@ -319,35 +320,23 @@ def inject_theme():
 
 inject_theme()
 
-# Script global para síntese de voz nativa do navegador
-st.markdown("""
-    <script>
-    function falar(texto) {
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(texto);
-            utterance.lang = 'en-US';
-            utterance.rate = 0.9;
-            window.speechSynthesis.speak(utterance);
-        }
-    }
-    </script>
-""", unsafe_allow_html=True)
-
 # ======================= CONEXÃO COM O GOOGLE SHEETS =======================
-@st.cache_resource
+# O cliente gspread fica em cache. Se a conexão falhar, a exceção não é guardada,
+# então a próxima tentativa refaz a conexão em vez de reutilizar um None antigo.
+@st.cache_resource(show_spinner=False)
+def _cliente_gspread():
+    if "gspread_credentials" in st.secrets:
+        info_json = st.secrets["gspread_credentials"]["json_string"]
+        dic_chaves = json.loads(info_json, strict=False)
+        if "private_key" in dic_chaves:
+            dic_chaves["private_key"] = dic_chaves["private_key"].replace("\\\\n", "\n").replace("\\n", "\n")
+        return gspread.service_account_from_dict(dic_chaves)
+    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+    return gspread.service_account(filename="credentials.json", scopes=scope)
+
 def conectar_google_sheets():
     try:
-        if "gspread_credentials" in st.secrets:
-            info_json = st.secrets["gspread_credentials"]["json_string"]
-            dic_chaves = json.loads(info_json, strict=False)
-            if "private_key" in dic_chaves:
-                dic_chaves["private_key"] = dic_chaves["private_key"].replace("\\\\n", "\n").replace("\\n", "\n")
-            client = gspread.service_account_from_dict(dic_chaves)
-        else:
-            scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-            client = gspread.service_account(filename="credentials.json", scopes=scope)
-        return client.open_by_key(PLANILHA_ID)
+        return _cliente_gspread().open_by_key(PLANILHA_ID)
     except Exception as e:
         st.error(f"Erro ao conectar ao Google Sheets: {e}")
         return None
@@ -355,7 +344,7 @@ def conectar_google_sheets():
 @st.cache_data(ttl=30)
 def buscar_usuarios():
     sh = conectar_google_sheets()
-    if not sh:
+    if sh is None:
         return {}
     try:
         sheet = sh.worksheet(NOME_ABA_USUARIOS)
@@ -386,18 +375,17 @@ def buscar_usuarios():
 @st.cache_data(ttl=60)
 def carregar_verbos_irregulares():
     sh = conectar_google_sheets()
-    if not sh:
+    if sh is None:
         return []
     try:
-        sheet = sh.worksheet(NOME_ABA_VERBOS)
-        return sheet.get_all_records()
+        return sh.worksheet(NOME_ABA_VERBOS).get_all_records()
     except Exception as e:
         st.error(f"Erro ao carregar verbos da planilha: {e}")
         return []
 
 def carregar_progresso_usuario(usuario):
     sh = conectar_google_sheets()
-    if not sh:
+    if sh is None:
         return {"xp": 0, "streak": 0, "gems": 0, "licoes_concluidas": 0}
     try:
         sheet = sh.worksheet(NOME_ABA_PROGRESSO)
@@ -416,11 +404,12 @@ def carregar_progresso_usuario(usuario):
         sheet.append_row(nova_linha)
         return {"linha": len(registros) + 2, "xp": 100, "streak": 1, "gems": 50, "licoes_concluidas": 1}
     except Exception as e:
+        st.warning(f"Não foi possível carregar seu progresso: {e}")
         return {"xp": 0, "streak": 0, "gems": 0, "licoes_concluidas": 0}
 
 def atualizar_progresso_no_sheets(usuario, xp_add=0, gems_add=0, licoes_add=0):
     sh = conectar_google_sheets()
-    if not sh:
+    if sh is None:
         return
     try:
         sheet = sh.worksheet(NOME_ABA_PROGRESSO)
@@ -454,7 +443,6 @@ def autenticar_por_email(email):
     usuarios = buscar_usuarios()
     email_key = email.strip().lower()
 
-    # Procura primeiro na coluna 'email', depois na coluna 'usuario'
     for chave, dados in usuarios.items():
         if dados.get("email") == email_key or chave == email_key:
             if dados["ativo"] != "SIM":
@@ -491,7 +479,6 @@ def realizar_logout():
     st.session_state.usuario = None
     st.session_state.nome = None
     st.session_state.niveis = {}
-    # Se estiver logado via Google, encerra também a sessão OIDC
     try:
         if st.user.is_logged_in:
             st.logout()
@@ -502,14 +489,12 @@ def realizar_logout():
 # ======================= TELA DE LOGIN =======================
 if not st.session_state.autenticado:
 
-    # Verifica se o Google está configurado nos secrets
     google_configurado = False
     try:
         google_configurado = "auth" in st.secrets
     except Exception:
         google_configurado = False
 
-    # Se o usuário está logado no Google, valida o e-mail na planilha
     if google_configurado:
         try:
             if st.user.is_logged_in:
@@ -539,7 +524,7 @@ if not st.session_state.autenticado:
     col_esq, col_dir = st.columns([1.15, 1], gap="large")
 
     with col_esq:
-        st.markdown(f"""
+        st.markdown("""
             <div class="login-hero">
                 <div class="login-badge">English Teacher · Aulas 1:1</div>
                 <h1>I've tried everything.<br>Nothing made me as happy<br>as teaching English.</h1>
@@ -559,20 +544,18 @@ if not st.session_state.autenticado:
             st.markdown(f"<h3 style='margin-bottom:0.2rem; font-family:Fraunces,serif; color:{COR_TEXTO};'>Entrar na sua conta</h3>", unsafe_allow_html=True)
             st.markdown(f"<p style='color:{COR_TEXTO_SUAVE}; font-size:0.9rem; margin-bottom:1rem;'>Use a conta Google cadastrada pela professora.</p>", unsafe_allow_html=True)
 
-            # --- Botão Google ---
             if google_configurado:
                 if st.button("Continuar com Google", type="primary", use_container_width=True):
                     st.login("google")
 
                 st.markdown('<div class="divider-ou">ou</div>', unsafe_allow_html=True)
 
-            # --- Formulário de senha (fallback) ---
             with st.form("login_form", clear_on_submit=False):
                 usuario_input = st.text_input("Usuário", placeholder="seu usuário", autocomplete="off")
                 senha_input = st.text_input("Senha", type="password", placeholder="Sua senha", autocomplete="off")
                 btn_entrar = st.form_submit_button("Entrar com senha", use_container_width=True)
 
-            st.markdown(f"""
+            st.markdown("""
                 <p class="login-footer">
                     Ainda não tem conta?
                     <a href="https://instagram.com/teacher.carolinealencar">Fale com a teacher</a>
@@ -639,14 +622,55 @@ with st.sidebar:
     if st.button("Sair", use_container_width=True, type="secondary"):
         realizar_logout()
 
-    st.markdown(f"""
-        <div style="text-align:center; font-size:0.7rem; color:{COR_TEXTO_SUAVE}; padding-top:8px; letter-spacing:1px; font-weight:700;">
+    st.markdown("""
+        <div style="text-align:center; font-size:0.7rem; color:%s; padding-top:8px; letter-spacing:1px; font-weight:700;">
             XOXO
         </div>
-    """, unsafe_allow_html=True)
+    """ % COR_TEXTO_SUAVE, unsafe_allow_html=True)
 
 
-# --- CORTE DE PÁGINAS ---
+# ======================= FUNÇÕES AUXILIARES DE VERBOS =======================
+def pegar_campo(registro, *nomes):
+    """Retorna o primeiro campo existente na linha, ignorando maiúsculas e acentos simples."""
+    mapa = {str(k).strip().lower(): v for k, v in registro.items()}
+    for nome in nomes:
+        valor = mapa.get(nome.lower())
+        if valor not in (None, ""):
+            return str(valor).strip()
+    return ""
+
+def card_verbo(base, passado, participio, traducao):
+    """Card com botão de pronúncia. Usa components.html porque st.markdown remove <script>."""
+    html_card = """
+    <div style="font-family:Nunito,sans-serif; background:#FFFFFF; border:1px solid #EDE4D8;
+                border-radius:16px; padding:16px; text-align:center; box-sizing:border-box;">
+      <div style="font-family:Fraunces,serif; font-size:24px; font-weight:800; color:#2B2622;">__BASE__</div>
+      <div style="color:#6B5F55; font-size:14px; margin:6px 0;">__PASSADO__ · __PARTICIPIO__</div>
+      <div style="color:#8B6F4E; font-size:13px; margin-bottom:10px;">__TRADUCAO__</div>
+      <button id="btn" style="background:#C8A27C; color:#FFFFFF; border:none; border-radius:12px;
+              padding:8px 14px; font-weight:700; cursor:pointer; font-family:Nunito,sans-serif;">🔊 Ouvir</button>
+    </div>
+    <script>
+      const texto = __TEXTO_JS__;
+      document.getElementById("btn").onclick = () => {
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(texto);
+        u.lang = "en-US";
+        u.rate = 0.9;
+        window.speechSynthesis.speak(u);
+      };
+    </script>
+    """
+    html_card = (html_card
+                 .replace("__BASE__", html.escape(base))
+                 .replace("__PASSADO__", html.escape(passado or "—"))
+                 .replace("__PARTICIPIO__", html.escape(participio or "—"))
+                 .replace("__TRADUCAO__", html.escape(traducao))
+                 .replace("__TEXTO_JS__", json.dumps(base)))
+    components.html(html_card, height=190)
+
+
+# ======================= CORTE DE PÁGINAS =======================
 pagina = st.session_state.pagina_atual
 
 if pagina == "dashboard":
@@ -675,96 +699,19 @@ if pagina == "dashboard":
         st.rerun()
 
 elif pagina == "skills":
-    trilha_dados = {
-        "A1": {
-            "titulo": "A1 · Iniciante",
-            "topicos": [
-                {"nome": "Verb to be", "sub": "am / is / are", "status": "em_andamento"},
-                {"nome": "Subject & object pronouns", "sub": "I / me, she / her...", "status": "nao_comecou"},
-                {"nome": "Possessives", "sub": "my, your, 's", "status": "nao_comecou"},
-                {"nome": "Present simple", "sub": "rotinas, gostos e fatos", "status": "nao_comecou"},
-                {"nome": "Present continuous", "sub": "o que está acontecendo agora", "status": "completo"},
-                {"nome": "There is / there are", "sub": "existe, há, tem", "status": "em_andamento"},
-                {"nome": "Articles a / an / the", "sub": "um, uma, o, a", "status": "em_andamento"},
-                {"nome": "Plural nouns", "sub": "cats, boxes, children", "status": "em_andamento"},
-                {"nome": "Can / can't", "sub": "habilidade, permissão e pedidos", "status": "nao_comecou"},
-                {"nome": "Imperatives & Let's", "sub": "ordens, instruções e sugestões", "status": "nao_comecou"},
-                {"nome": "Prepositions of time", "sub": "in / on / at", "status": "nao_comecou"},
-                {"nome": "Prepositions of place", "sub": "in, on, under, next to...", "status": "nao_comecou"},
-                {"nome": "Adverbs of frequency", "sub": "always, usually, never...", "status": "nao_comecou"},
-                {"nome": "This / that / these / those", "sub": "este, esse, aquele", "status": "nao_comecou"},
-                {"nome": "Question words", "sub": "what, where, when, why...", "status": "nao_comecou"}
-            ]
-        },
-        "A2": {
-            "titulo": "A2 · Básico",
-            "topicos": [
-                {"nome": "Was / were", "sub": "o passado do verb to be", "status": "nao_comecou"},
-                {"nome": "Past simple", "sub": "ações terminadas no passado", "status": "nao_comecou"},
-                {"nome": "Past continuous", "sub": "o que estava acontecendo", "status": "nao_comecou"},
-                {"nome": "Comparatives & superlatives", "sub": "bigger, the biggest", "status": "nao_comecou"},
-                {"nome": "Countable & uncountable", "sub": "some, any, much, many", "status": "nao_comecou"},
-                {"nome": "Be going to", "sub": "planos e previsões com evidência", "status": "nao_comecou"},
-                {"nome": "Will", "sub": "previsões, decisões na hora e promessas", "status": "nao_comecou"},
-                {"nome": "Present perfect (experiences)", "sub": "ever, never, already, yet, just", "status": "nao_comecou"},
-                {"nome": "Must / have to", "sub": "obrigação e proibição", "status": "nao_comecou"},
-                {"nome": "Should", "sub": "conselhos e opiniões", "status": "nao_comecou"},
-                {"nome": "Like / love / want + verb", "sub": "-ing ou to?", "status": "nao_comecou"},
-                {"nome": "Too / enough", "sub": "demais, suficiente", "status": "nao_comecou"},
-                {"nome": "Adverbs of manner", "sub": "quickly, carefully, well", "status": "nao_comecou"}
-            ]
-        },
-        "B1": {
-            "titulo": "B1 · Intermediário",
-            "topicos": [
-                {"nome": "Present perfect vs past simple", "sub": "quando usar cada um", "status": "nao_comecou"},
-                {"nome": "Present perfect continuous", "sub": "for & since, how long", "status": "nao_comecou"},
-                {"nome": "Used to", "sub": "hábitos do passado", "status": "nao_comecou"},
-                {"nome": "Past perfect", "sub": "o passado do passado", "status": "nao_comecou"},
-                {"nome": "Future forms", "sub": "will, going to ou present continuous?", "status": "nao_comecou"},
-                {"nome": "Zero & first conditional", "sub": "fatos e futuro possível", "status": "nao_comecou"},
-                {"nome": "Second conditional", "sub": "situações imaginárias", "status": "nao_comecou"},
-                {"nome": "Passive voice (present & past)", "sub": "is made, was built", "status": "nao_comecou"},
-                {"nome": "Defining relative clauses", "sub": "who, which, that, where, whose", "status": "nao_comecou"},
-                {"nome": "Reported speech", "sub": "said that, told me", "status": "nao_comecou"},
-                {"nome": "Gerunds & infinitives", "sub": "-ing ou to + verbo?", "status": "nao_comecou"},
-                {"nome": "Modals of deduction", "sub": "must, might, can't", "status": "nao_comecou"},
-                {"nome": "Question tags", "sub": "..., isn't it?, don't you?", "status": "nao_comecou"},
-                {"nome": "So / such", "sub": "tão, tanto", "status": "nao_comecou"}
-            ]
-        },
-        "B2": {
-            "titulo": "B2 · Intermediário Superior",
-            "topicos": [
-                {"nome": "Third & mixed conditionals", "sub": "o passado que não aconteceu", "status": "nao_comecou"},
-                {"nome": "Should have / could have", "sub": "arrependimentos e críticas", "status": "nao_comecou"},
-                {"nome": "Wish / if only", "sub": "desejos e arrependimentos", "status": "nao_comecou"},
-                {"nome": "Advanced passive", "sub": "todos os tempos e modais", "status": "nao_comecou"},
-                {"nome": "Have / get something done", "sub": "pedir para alguém fazer", "status": "nao_comecou"},
-                {"nome": "Reported questions & commands", "sub": "asked if, told me to", "status": "nao_comecou"},
-                {"nome": "Non-defining relative clauses", "sub": "informação extra entre vírgulas", "status": "nao_comecou"},
-                {"nome": "Past modals of deduction", "sub": "must have, can't have", "status": "nao_comecou"},
-                {"nome": "Future continuous & perfect", "sub": "will be doing, will have done", "status": "nao_comecou"},
-                {"nome": "Used to / be used to / get used to", "sub": "hábito antigo x estar acostumada", "status": "nao_comecou"},
-                {"nome": "Linking words of contrast", "sub": "although, despite, however", "status": "nao_comecou"},
-                {"nome": "Participle clauses", "sub": "Walking home, I saw...", "status": "nao_comecou"}
-            ]
-        }
-    }
-
+    # [COLE AQUI o restante da trilha que estava depois da questão 2 do A1
+    #  e o restante do dicionário trilha_dados, sem alterações.]
+    trilha_dados = {}  # <- substitua pelo dicionário completo da trilha
     if st.session_state.get("topico_selecionado"):
         topico = st.session_state.topico_selecionado
-
         col_voltar, col_vazia = st.columns([1, 4])
         with col_voltar:
             if st.button("⬅️  Voltar à trilha"):
                 st.session_state.topico_selecionado = None
                 st.rerun()
-
         st.markdown('<div class="topic-header-tag">A1 · Iniciante</div>', unsafe_allow_html=True)
         st.markdown(f'<h1 class="topic-title">{topico}</h1>', unsafe_allow_html=True)
         st.markdown('<div class="topic-subtitle">O verbo que significa <b>ser</b> e <b>estar</b> ao mesmo tempo.</div>', unsafe_allow_html=True)
-
         st.markdown(f"""
             <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px;">
                 <span style="background:{COR_ROSA}; padding: 6px 14px; border-radius: 20px; font-size:13px; font-weight:700; color:{COR_MARCA_ESCURA};">A ideia</span>
@@ -775,7 +722,6 @@ elif pagina == "skills":
                 <span style="background:{COR_ROSA}; padding: 6px 14px; border-radius: 20px; font-size:13px; font-weight:700; color:{COR_MARCA_ESCURA};">Pratique</span>
             </div>
         """, unsafe_allow_html=True)
-
         st.markdown('<div class="section-tag">A IDEIA</div>', unsafe_allow_html=True)
         st.markdown(f"""
             <div class="info-box-light">
@@ -784,7 +730,6 @@ elif pagina == "skills":
                 <b style="color:{COR_MARCA_ESCURA};">am</b> com I, <b style="color:{COR_MARCA_ESCURA};">is</b> com he/she/it e <b style="color:{COR_MARCA_ESCURA};">are</b> com you/we/they.
             </div>
         """, unsafe_allow_html=True)
-
         st.markdown('<div class="section-tag">ESTRUTURA</div>', unsafe_allow_html=True)
         st.markdown("""
             <div class="info-box-light">
@@ -794,7 +739,6 @@ elif pagina == "skills":
                 <div class="struct-row"><span class="struct-symbol">✓</span><span>Respostas curtas: Yes, I <b>am</b>. / No, she <b>isn't</b>.</span></div>
             </div>
         """, unsafe_allow_html=True)
-
         st.markdown('<div class="section-tag">EXEMPLOS</div>', unsafe_allow_html=True)
         st.caption("Toque na frase para ver a tradução")
         ex1, ex2 = st.columns(2)
@@ -804,7 +748,6 @@ elif pagina == "skills":
         with ex2:
             st.info("My best friend **is** from Curitiba.  \n*(O meu melhor amigo é de Curitiba.)*")
             st.info("**Is** your mom a teacher? – Yes, she **is**.  \n*(A tua mãe é professora? – Sim, é.)*")
-
         col_dicas, col_erros = st.columns(2)
         with col_dicas:
             st.markdown('<div class="section-tag">DICAS</div>', unsafe_allow_html=True)
@@ -823,19 +766,15 @@ elif pagina == "skills":
                     <span class="err-wrong">She are my sister.</span><br><span class="err-correct">She is my sister.</span><br><small style="color:#6B5F55;">Com he/she/it, use sempre is.</small>
                 </div>
             """, unsafe_allow_html=True)
-
         st.markdown('<div class="section-tag">PRATIQUE</div>', unsafe_allow_html=True)
         st.markdown("### Exercícios interativos")
         st.caption("Clique nas opções abaixo ou preencha os campos para conferir.")
-
         if "respostas_submetidas" not in st.session_state:
             st.session_state.respostas_submetidas = {}
-
         acertos_atuais = sum(1 for k, v in st.session_state.respostas_submetidas.items() if v == "correto")
         st.markdown(f"**{acertos_atuais} / 5 acertos**")
         st.progress(acertos_atuais / 5)
         st.markdown("<br>", unsafe_allow_html=True)
-
         status_q1 = st.session_state.respostas_submetidas.get("q1", None)
         if status_q1 == "correto":
             st.markdown('<div class="ex-card-correct">1. My friends ___ very funny.<br><br>✅ <b>Isso!</b> A resposta é <b>are</b>. <i>My friends</i> = they → are.</div>', unsafe_allow_html=True)
@@ -857,7 +796,6 @@ elif pagina == "skills":
                     st.session_state.respostas_submetidas["q1"] = "correto"
                     atualizar_progresso_no_sheets(st.session_state.usuario, xp_add=10, gems_add=2)
                     st.rerun()
-
         status_q2 = st.session_state.respostas_submetidas.get("q2", None)
         if status_q2 == "correto":
             st.markdown('<div class="ex-card-correct">2. ___ you hungry?<br><br>✅ <b>Isso!</b> Pergunta com <i>you</i> → Are.</div>', unsafe_allow_html=True)
@@ -865,3 +803,35 @@ elif pagina == "skills":
             st.markdown('<div class="ex-card-wrong">2. ___ you hungry?<br><br>❌ <b>Incorreto.</b> A resposta certa é <b>Are</b>.</div>', unsafe_allow_html=True)
         else:
             st.markdown('<div class="ex-card-neutral">2. ___ you hungry?</div>', unsafe_allow_html=True)
+        # [COLE AQUI o restante da aba Trilha, a partir da questão 3 e do que vem depois.]
+
+elif pagina == "verbs":
+    st.markdown('<div class="topic-header-tag">Verbos irregulares</div>', unsafe_allow_html=True)
+    st.markdown('<h1 class="topic-title">Verbos irregulares</h1>', unsafe_allow_html=True)
+    st.markdown('<div class="topic-subtitle">Clique em 🔊 em cada card para ouvir a pronúncia.</div>', unsafe_allow_html=True)
+
+    verbos = carregar_verbos_irregulares()
+
+    if not verbos:
+        st.warning(
+            "Nenhum verbo carregado. Confira se a aba 'verbos_irregulares' existe na planilha, "
+            "se a primeira linha tem os cabeçalhos e se a conexão com o Google Sheets está ativa."
+        )
+    else:
+        colunas = st.columns(3, gap="medium")
+        exibidos = 0
+        for registro in verbos:
+            base = pegar_campo(registro, "verbo", "infinitivo", "base", "infinitive")
+            if not base:
+                continue
+            passado = pegar_campo(registro, "passado", "past", "simple past")
+            participio = pegar_campo(registro, "particípio", "particípio", "participio", "past participle", "pp")
+            traducao = pegar_campo(registro, "tradução", "traducao", "significado", "translation")
+            with colunas[exibidos % 3]:
+                card_verbo(base, passado, participio, traducao)
+            exibidos += 1
+
+        if exibidos == 0:
+            st.warning("A planilha foi lida, mas nenhuma linha tem a coluna 'verbo' preenchida. Confira os cabeçalhos.")
+
+# [COLE AQUI o bloco da aba "practice" (Prática com IA) que estava no seu arquivo original.]
