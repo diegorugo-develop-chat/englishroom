@@ -11,166 +11,270 @@ NOME_ABA_USUARIOS = "usuarios"
 NOME_ABA_PROGRESSO = "progresso"
 NOME_ABA_VERBOS = "verbos_irregulares"
 
+# Paleta da marca
+COR_MARCA = "#1F4E5F"
+COR_MARCA_CLARA = "#2E6B7E"
+COR_FUNDO = "#F5F7F8"
+COR_TEXTO = "#1A1A1A"
+COR_TEXTO_SUAVE = "#4A5568"
+COR_BORDA = "#E6EAED"
+
 st.set_page_config(
-    page_title="CarolEnglish — Plataforma de Ensino",
+    page_title="CarolEnglish — Aulas de inglês",
     page_icon="💜",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-# ======================= ESTILOS CSS GLOBAIS =======================
-st.markdown("""
+# ======================= ESTILOS GLOBAIS =======================
+def inject_theme():
+    st.markdown(f"""
     <style>
-        .stApp {
-            background-color: #f8fafc;
-            font-family: 'Inter', sans-serif;
-        }
-        section[data-testid="stSidebar"] {
-            background: #ffffff;
-            border-right: 1px solid #eaeaea;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.02);
-        }
-        section[data-testid="stSidebar"] .stButton button {
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+        html, body, [class*="css"] {{
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }}
+
+        /* Oculta a barra do Streamlit */
+        #MainMenu, footer, header {{ visibility: hidden; }}
+        [data-testid="stToolbar"] {{ display: none; }}
+        [data-testid="stDecoration"] {{ display: none; }}
+        [data-testid="stStatusWidget"] {{ display: none; }}
+
+        .stApp {{
+            background-color: {COR_FUNDO};
+        }}
+
+        /* Sidebar */
+        section[data-testid="stSidebar"] {{
+            background: #FFFFFF;
+            border-right: 1px solid {COR_BORDA};
+        }}
+        section[data-testid="stSidebar"] > div:first-child {{
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            padding-bottom: 1rem;
+        }}
+        section[data-testid="stSidebar"] .stButton button {{
             width: 100%;
             justify-content: flex-start;
             border: none;
-            border-radius: 12px;
-            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            padding: 0.7rem 1rem;
             background: transparent;
-            color: #5c6b73;
+            color: {COR_TEXTO_SUAVE};
             font-weight: 600;
             font-size: 14px;
             text-align: left;
-            transition: all 0.2s;
-        }
-        section[data-testid="stSidebar"] .stButton button:hover {
-            background: #f0f3ff;
-            color: #4f67e8;
-        }
-        section[data-testid="stSidebar"] .stButton button[kind="primary"] {
-            background: linear-gradient(110deg, #8aa0ff, #4f67e8);
-            color: #ffffff;
-            box-shadow: 0 4px 12px rgba(79, 103, 232, 0.25);
-        }
-        .welcome-banner {
-            background: linear-gradient(110deg, #8aa0ff, #4f67e8);
-            border-radius: 20px;
-            padding: 28px;
-            color: white;
-            box-shadow: 0 10px 25px rgba(79, 103, 232, 0.2);
-            margin-bottom: 24px;
-        }
-        .metric-card {
-            background: white;
+            transition: all 0.15s ease;
+        }}
+        section[data-testid="stSidebar"] .stButton button:hover {{
+            background: #EEF3F5;
+            color: {COR_MARCA};
+        }}
+        section[data-testid="stSidebar"] .stButton button[kind="primary"] {{
+            background: {COR_MARCA};
+            color: #FFFFFF;
+            box-shadow: 0 2px 8px rgba(31, 78, 95, 0.20);
+        }}
+
+        /* Botões gerais */
+        .stButton > button {{
+            border-radius: 10px;
+            font-weight: 600;
+            padding: 0.6rem 1.2rem;
+            transition: all 0.15s ease;
+        }}
+
+        /* Banner de boas-vindas */
+        .welcome-banner {{
+            background: {COR_MARCA};
             border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.04);
-            text-align: center;
-            border-top: 4px solid #4f67e8;
-        }
-        
-        /* Estilos da Página de Lição / Tópico */
-        .topic-header-tag {
-            color: #0d9488;
+            padding: 28px 32px;
+            color: white;
+            margin-bottom: 24px;
+        }}
+        .welcome-banner h2 {{
+            margin: 0 0 6px 0;
+            font-size: 1.6rem;
             font-weight: 700;
-            font-size: 14px;
+        }}
+        .welcome-banner p {{
+            margin: 0;
+            opacity: 0.85;
+            font-size: 0.95rem;
+        }}
+
+        /* Cards de métrica com altura uniforme */
+        .metric-card {{
+            background: #FFFFFF;
+            border-radius: 14px;
+            padding: 20px 16px;
+            border: 1px solid {COR_BORDA};
+            text-align: center;
+            min-height: 108px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }}
+        .metric-card h3 {{
+            margin: 0 0 4px 0;
+            font-size: 1.9rem;
+            font-weight: 700;
+            color: {COR_MARCA};
+        }}
+        .metric-card p {{
+            margin: 0;
+            color: {COR_TEXTO_SUAVE};
+            font-size: 0.85rem;
+            font-weight: 500;
+        }}
+
+        /* Página de lição */
+        .topic-header-tag {{
+            color: {COR_MARCA};
+            font-weight: 700;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
             margin-bottom: 4px;
-        }
-        .topic-title {
-            font-size: 36px;
+        }}
+        .topic-title {{
+            font-size: 34px;
             font-weight: 800;
-            color: #0f172a;
+            color: {COR_TEXTO};
             margin: 0 0 8px 0;
-        }
-        .topic-subtitle {
-            color: #64748b;
+            line-height: 1.2;
+        }}
+        .topic-subtitle {{
+            color: {COR_TEXTO_SUAVE};
             font-size: 16px;
             margin-bottom: 20px;
-        }
-        .section-tag {
+        }}
+        .section-tag {{
             font-size: 11px;
             font-weight: 800;
             letter-spacing: 1px;
-            color: #64748b;
+            color: {COR_TEXTO_SUAVE};
             text-transform: uppercase;
             margin-top: 24px;
             margin-bottom: 12px;
-        }
-        .info-box-light {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 16px;
+        }}
+        .info-box-light {{
+            background: #FFFFFF;
+            border: 1px solid {COR_BORDA};
+            border-radius: 14px;
             padding: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
             margin-bottom: 16px;
             color: #334155;
             font-size: 15px;
-            line-height: 1.6;
-        }
-        .struct-row {
-            background: #f1f5f9;
-            border-radius: 10px;
+            line-height: 1.65;
+        }}
+        .struct-row {{
+            background: {COR_FUNDO};
+            border-radius: 8px;
             padding: 12px 18px;
             margin-bottom: 8px;
             display: flex;
             align-items: center;
-            font-family: monospace;
-            font-size: 15px;
-        }
-        .struct-symbol {
+            font-family: ui-monospace, monospace;
+            font-size: 14px;
+        }}
+        .struct-symbol {{
             font-weight: bold;
             width: 30px;
-            color: #0d9488;
-        }
-        .tip-card-green {
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
+            color: {COR_MARCA};
+        }}
+        .tip-card-green {{
+            background: #F0FDF4;
+            border: 1px solid #BBF7D0;
             border-radius: 12px;
             padding: 16px;
             color: #166534;
-        }
-        .error-card {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
+            font-size: 14px;
+            line-height: 1.6;
+        }}
+        .error-card {{
+            background: #FFFFFF;
+            border: 1px solid {COR_BORDA};
             border-radius: 12px;
             padding: 16px;
-        }
-        .err-wrong {
-            color: #dc2626;
+            font-size: 14px;
+        }}
+        .err-wrong {{
+            color: #DC2626;
             text-decoration: line-through;
             font-weight: 600;
-        }
-        .err-correct {
-            color: #16a34a;
+        }}
+        .err-correct {{
+            color: #16A34A;
             font-weight: 700;
-        }
-        
-        /* Estilos dos Cards de Exercícios */
-        .ex-card-correct {
-            background-color: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            border-radius: 16px;
+        }}
+
+        /* Cards de exercício */
+        .ex-card-correct {{
+            background-color: #F0FDF4;
+            border: 1px solid #BBF7D0;
+            border-radius: 14px;
             padding: 20px;
             margin-bottom: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-        }
-        .ex-card-wrong {
-            background-color: #fef2f2;
-            border: 1px solid #fecaca;
-            border-radius: 16px;
+            font-size: 15px;
+        }}
+        .ex-card-wrong {{
+            background-color: #FEF2F2;
+            border: 1px solid #FECACA;
+            border-radius: 14px;
             padding: 20px;
             margin-bottom: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-        }
-        .ex-card-neutral {
-            background-color: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 16px;
+            font-size: 15px;
+        }}
+        .ex-card-neutral {{
+            background-color: #FFFFFF;
+            border: 1px solid {COR_BORDA};
+            border-radius: 14px;
             padding: 20px;
             margin-bottom: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-        }
+            font-size: 15px;
+        }}
+
+        /* Login */
+        .login-hero {{
+            padding: 2rem 1rem 2rem 0;
+        }}
+        .login-hero h1 {{
+            color: {COR_MARCA};
+            font-size: 2.3rem;
+            line-height: 1.25;
+            font-weight: 800;
+            margin: 0 0 1rem 0;
+        }}
+        .login-hero p {{
+            font-size: 1.05rem;
+            color: {COR_TEXTO_SUAVE};
+            line-height: 1.65;
+            margin: 0 0 1.5rem 0;
+        }}
+        .login-hero .destaque {{
+            font-size: 0.95rem;
+            color: #718096;
+        }}
+        .login-footer {{
+            text-align: center;
+            font-size: 0.85rem;
+            color: #718096;
+            margin-top: 1rem;
+        }}
+        .login-footer a {{
+            color: {COR_MARCA};
+            font-weight: 600;
+            text-decoration: none;
+        }}
     </style>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
+
+inject_theme()
 
 # Script global para síntese de voz nativa do navegador
 st.markdown("""
@@ -278,12 +382,12 @@ def atualizar_progresso_no_sheets(usuario, xp_add=0, gems_add=0, licoes_add=0):
         sheet = sh.worksheet(NOME_ABA_PROGRESSO)
         prog = carregar_progresso_usuario(usuario)
         linha = prog.get("linha")
-        
+
         novo_xp = prog["xp"] + xp_add
         novas_gems = prog["gems"] + gems_add
         novas_licoes = prog["licoes_concluidas"] + licoes_add
         hoje = datetime.now().strftime("%d/%m/%Y")
-        
+
         sheet.update_cell(linha, 2, novo_xp)
         sheet.update_cell(linha, 4, novas_gems)
         sheet.update_cell(linha, 5, novas_licoes)
@@ -308,7 +412,7 @@ def realizar_login(usuario_input, senha_input):
     if usr_key in usuarios:
         dados = usuarios[usr_key]
         if dados["ativo"] != "SIM":
-            st.error("Utilizador inativo. Solicite liberação.")
+            st.error("Conta inativa. Fale com a professora para liberar o acesso.")
         elif dados["senha"] == senha_input.strip():
             st.session_state.autenticado = True
             st.session_state.usuario = usr_key
@@ -317,9 +421,9 @@ def realizar_login(usuario_input, senha_input):
             st.session_state.pagina_atual = "dashboard"
             st.rerun()
         else:
-            st.error("Palavra-passe incorreta.")
+            st.error("Senha incorreta. Tente novamente.")
     else:
-        st.error("Utilizador não encontrado.")
+        st.error("E-mail não encontrado. Confira ou fale com a professora.")
 
 def realizar_logout():
     st.session_state.autenticado = False
@@ -330,68 +434,117 @@ def realizar_logout():
 
 # ======================= TELA DE LOGIN =======================
 if not st.session_state.autenticado:
-    st.markdown("""
+    st.markdown(f"""
         <style>
-            .stApp { background: linear-gradient(135deg, #f0f3ff 0%, #e3e9fd 100%); }
-            [data-testid="stTextInput"] input { text-align: center !important; }
+            .stApp {{ background: #FFFFFF; }}
         </style>
     """, unsafe_allow_html=True)
 
-    col1, col2, col3 = st.columns([1, 1.5, 1])
-    with col2:
-        st.markdown("<br><br>", unsafe_allow_html=True)
-        with st.form("login_form"):
-            st.title("💜 CarolEnglish")
-            st.caption("Faça login para aceder à sua plataforma")
-            st.divider()
+    st.markdown("<div style='height: 6vh'></div>", unsafe_allow_html=True)
 
-            usuario_input = st.text_input("Utilizador")
-            senha_input = st.text_input("Palavra-passe", type="password")
-            btn_entrar = st.form_submit_button("Entrar", type="primary", use_container_width=True)
+    col_esq, col_dir = st.columns([1.15, 1], gap="large")
+
+    with col_esq:
+        st.markdown(f"""
+            <div class="login-hero">
+                <h1>Inglês que você usa<br>na vida real</h1>
+                <p>
+                    Aulas particulares 1:1 com trilha personalizada,
+                    prática de conversação e acompanhamento de progresso.
+                </p>
+                <p class="destaque">
+                    Já é aluna(o)? Entre ao lado para continuar sua trilha.
+                </p>
+            </div>
+        """, unsafe_allow_html=True)
+
+    with col_dir:
+        st.markdown("<div style='height: 6vh'></div>", unsafe_allow_html=True)
+        with st.container(border=True):
+            st.markdown(f"<h3 style='margin-bottom:0.2rem; color:{COR_TEXTO};'>Entrar na sua conta</h3>", unsafe_allow_html=True)
+            st.markdown(f"<p style='color:{COR_TEXTO_SUAVE}; font-size:0.9rem; margin-bottom:1rem;'>Use o acesso enviado pela professora.</p>", unsafe_allow_html=True)
+
+            with st.form("login_form", clear_on_submit=False):
+                usuario_input = st.text_input(
+                    "E-mail ou usuário",
+                    placeholder="seu@email.com",
+                    autocomplete="off"
+                )
+                senha_input = st.text_input(
+                    "Senha",
+                    type="password",
+                    placeholder="Sua senha",
+                    autocomplete="off"
+                )
+                btn_entrar = st.form_submit_button(
+                    "Entrar",
+                    type="primary",
+                    use_container_width=True
+                )
+
+            st.markdown(f"""
+                <p class="login-footer">
+                    Ainda não tem conta?
+                    <a href="https://carolineenglish.com.br">Conheça as aulas</a>
+                </p>
+            """, unsafe_allow_html=True)
 
         if btn_entrar:
             if not usuario_input or not senha_input:
-                st.warning("Preencha o utilizador e a palavra-passe.")
+                st.warning("Preencha o e-mail e a senha.")
             else:
                 realizar_login(usuario_input, senha_input)
+
     st.stop()
 
 
 # ======================= SISTEMA PRINCIPAL =======================
-
 dados_progresso = carregar_progresso_usuario(st.session_state.usuario)
 
 # --- MENU LATERAL ---
 with st.sidebar:
-    st.markdown("### 💜 CarolEnglish")
-    st.caption(f"Aluno(a): **{st.session_state.nome}**")
-    
-    niveis_ativos = [nv for nv, status in st.session_state.niveis.items() if status == "SIM"]
-    st.caption(f"Níveis Autorizados: **{', '.join(niveis_ativos) if niveis_ativos else 'Nenhum'}**")
-    st.divider()
+    st.markdown(f"""
+        <div style="padding: 0.5rem 0 1rem 0;">
+            <div style="font-size:1.15rem; font-weight:800; color:{COR_MARCA};">
+                💜 CarolEnglish
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
 
-    if st.button("📊 Dashboard", use_container_width=True, type="primary" if st.session_state.pagina_atual == "dashboard" else "secondary"):
+    st.markdown(f"""
+        <div style="background:{COR_FUNDO}; border-radius:10px; padding:12px 14px; margin-bottom:16px;">
+            <div style="font-size:0.8rem; color:#718096; margin-bottom:2px;">Aluna(o)</div>
+            <div style="font-weight:700; color:{COR_TEXTO}; font-size:0.95rem;">{st.session_state.nome}</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+    niveis_ativos = [nv for nv, status in st.session_state.niveis.items() if status == "SIM"]
+    st.caption(f"Níveis liberados: **{', '.join(niveis_ativos) if niveis_ativos else 'Nenhum'}**")
+    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+
+    if st.button("📊  Dashboard", use_container_width=True, type="primary" if st.session_state.pagina_atual == "dashboard" else "secondary"):
         st.session_state.pagina_atual = "dashboard"
         st.session_state.topico_selecionado = None
         st.rerun()
 
-    if st.button("🚀 Skills / Trilha", use_container_width=True, type="primary" if st.session_state.pagina_atual == "skills" else "secondary"):
+    if st.button("🚀  Trilha de aprendizado", use_container_width=True, type="primary" if st.session_state.pagina_atual == "skills" else "secondary"):
         st.session_state.pagina_atual = "skills"
         st.session_state.topico_selecionado = None
         st.rerun()
 
-    if st.button("🔄 Verbos Irregulares", use_container_width=True, type="primary" if st.session_state.pagina_atual == "verbs" else "secondary"):
+    if st.button("🔄  Verbos irregulares", use_container_width=True, type="primary" if st.session_state.pagina_atual == "verbs" else "secondary"):
         st.session_state.pagina_atual = "verbs"
         st.session_state.topico_selecionado = None
         st.rerun()
 
-    if st.button("💬 Practice & AI", use_container_width=True, type="primary" if st.session_state.pagina_atual == "practice" else "secondary"):
+    if st.button("💬  Prática com IA", use_container_width=True, type="primary" if st.session_state.pagina_atual == "practice" else "secondary"):
         st.session_state.pagina_atual = "practice"
         st.session_state.topico_selecionado = None
         st.rerun()
 
-    st.markdown("<br><br><br>", unsafe_allow_html=True)
-    if st.button("🚪 Sair / Logout", type="secondary", use_container_width=True):
+    # Logout fixo no rodapé
+    st.markdown('<div style="margin-top:auto; padding-top:1rem; border-top:1px solid #E6EAED;"></div>', unsafe_allow_html=True)
+    if st.button("Sair", use_container_width=True, type="secondary"):
         realizar_logout()
 
 
@@ -401,26 +554,26 @@ pagina = st.session_state.pagina_atual
 if pagina == "dashboard":
     st.markdown(f"""
         <div class="welcome-banner">
-            <h2>Dashboard · Bem-vindo(a), {st.session_state.nome}!</h2>
-            <p style="margin: 0; opacity: 0.9;">Continue a manter a sua sequência de estudos em dia ✨</p>
+            <h2>Olá, {st.session_state.nome}!</h2>
+            <p>Continue mantendo sua sequência de estudos em dia.</p>
         </div>
     """, unsafe_allow_html=True)
 
-    c1, c2, c3, c4 = st.columns(4)
+    c1, c2, c3, c4 = st.columns(4, gap="small")
     with c1:
-        st.markdown(f'<div class="metric-card"><h3>{dados_progresso["xp"]}</h3><p style="color: #6b7a90; margin:0;">Points / XP</p></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="metric-card"><h3>{dados_progresso["xp"]}</h3><p>XP acumulado</p></div>', unsafe_allow_html=True)
     with c2:
-        st.markdown(f'<div class="metric-card"><h3>{dados_progresso["streak"]}</h3><p style="color: #6b7a90; margin:0;">Streak 🔥</p></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="metric-card"><h3>{dados_progresso["streak"]}</h3><p>Dias seguidos</p></div>', unsafe_allow_html=True)
     with c3:
-        st.markdown(f'<div class="metric-card"><h3>{dados_progresso["gems"]}</h3><p style="color: #6b7a90; margin:0;">Gems 💎</p></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="metric-card"><h3>{dados_progresso["gems"]}</h3><p>Gems</p></div>', unsafe_allow_html=True)
     with c4:
-        st.markdown(f'<div class="metric-card"><h3>{dados_progresso["licoes_concluidas"]}</h3><p style="color: #6b7a90; margin:0;">Lições Concluídas 🏆</p></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="metric-card"><h3>{dados_progresso["licoes_concluidas"]}</h3><p>Lições concluídas</p></div>', unsafe_allow_html=True)
 
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.subheader("⚡ Ações Rápidas de Estudo")
-    if st.button("✅ Concluir Lição de Exemplo (+50 XP e +10 Gems)"):
+    st.markdown("<div style='height:24px'></div>", unsafe_allow_html=True)
+    st.subheader("Ações rápidas")
+    if st.button("Concluir lição de exemplo (+50 XP e +10 Gems)"):
         atualizar_progresso_no_sheets(st.session_state.usuario, xp_add=50, gems_add=10, licoes_add=1)
-        st.success("Parabéns! A sua atividade foi registada e salva no Google Sheets com sucesso!")
+        st.success("Atividade registrada. Seu progresso foi salvo.")
         st.rerun()
 
 elif pagina == "skills":
@@ -504,10 +657,10 @@ elif pagina == "skills":
     # ================= VISUALIZAÇÃO DA LIÇÃO / TÓPICO =================
     if st.session_state.get("topico_selecionado"):
         topico = st.session_state.topico_selecionado
-        
+
         col_voltar, col_vazia = st.columns([1, 4])
         with col_voltar:
-            if st.button("⬅️ Voltar à Trilha"):
+            if st.button("⬅️  Voltar à trilha"):
                 st.session_state.topico_selecionado = None
                 st.rerun()
 
@@ -517,12 +670,12 @@ elif pagina == "skills":
 
         st.markdown("""
             <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px;">
-                <span style="background:#f1f5f9; padding: 6px 14px; border-radius: 20px; font-size:13px; font-weight:600; color:#475569;">A ideia</span>
-                <span style="background:#f1f5f9; padding: 6px 14px; border-radius: 20px; font-size:13px; font-weight:600; color:#475569;">Estrutura</span>
-                <span style="background:#f1f5f9; padding: 6px 14px; border-radius: 20px; font-size:13px; font-weight:600; color:#475569;">Exemplos</span>
-                <span style="background:#f1f5f9; padding: 6px 14px; border-radius: 20px; font-size:13px; font-weight:600; color:#475569;">Dicas</span>
-                <span style="background:#f1f5f9; padding: 6px 14px; border-radius: 20px; font-size:13px; font-weight:600; color:#475569;">Erros comuns</span>
-                <span style="background:#f1f5f9; padding: 6px 14px; border-radius: 20px; font-size:13px; font-weight:600; color:#475569;">Pratique</span>
+                <span style="background:#EEF3F5; padding: 6px 14px; border-radius: 20px; font-size:13px; font-weight:600; color:#1F4E5F;">A ideia</span>
+                <span style="background:#EEF3F5; padding: 6px 14px; border-radius: 20px; font-size:13px; font-weight:600; color:#1F4E5F;">Estrutura</span>
+                <span style="background:#EEF3F5; padding: 6px 14px; border-radius: 20px; font-size:13px; font-weight:600; color:#1F4E5F;">Exemplos</span>
+                <span style="background:#EEF3F5; padding: 6px 14px; border-radius: 20px; font-size:13px; font-weight:600; color:#1F4E5F;">Dicas</span>
+                <span style="background:#EEF3F5; padding: 6px 14px; border-radius: 20px; font-size:13px; font-weight:600; color:#1F4E5F;">Erros comuns</span>
+                <span style="background:#EEF3F5; padding: 6px 14px; border-radius: 20px; font-size:13px; font-weight:600; color:#1F4E5F;">Pratique</span>
             </div>
         """, unsafe_allow_html=True)
 
@@ -532,7 +685,7 @@ elif pagina == "skills":
             <div class="info-box-light">
                 Usamos o <b>to be</b> para dizer quem somos, de onde somos, nossa idade, profissão, como estamos e onde estamos.
                 Em português temos dois verbos (ser e estar); em inglês, um só faz os dois papéis. Ele muda conforme a pessoa:
-                <b style="color:#0d9488;">am</b> com I, <b style="color:#0d9488;">is</b> com he/she/it e <b style="color:#0d9488;">are</b> com you/we/they.
+                <b style="color:#1F4E5F;">am</b> com I, <b style="color:#1F4E5F;">is</b> com he/she/it e <b style="color:#1F4E5F;">are</b> com you/we/they.
             </div>
         """, unsafe_allow_html=True)
 
@@ -580,13 +733,12 @@ elif pagina == "skills":
 
         # ================= SEÇÃO PRATIQUE =================
         st.markdown('<div class="section-tag">PRATIQUE</div>', unsafe_allow_html=True)
-        st.markdown("### Exercícios Interativos")
-        st.caption("Clique nas opções abaixo ou preencha os campos dissertativos para conferir.")
+        st.markdown("### Exercícios interativos")
+        st.caption("Clique nas opções abaixo ou preencha os campos para conferir.")
 
         if "respostas_submetidas" not in st.session_state:
             st.session_state.respostas_submetidas = {}
 
-        # Barra de progresso visual de acertos
         acertos_atuais = sum(1 for k, v in st.session_state.respostas_submetidas.items() if v == "correto")
         st.markdown(f"**{acertos_atuais} / 5 acertos**")
         st.progress(acertos_atuais / 5)
@@ -623,311 +775,3 @@ elif pagina == "skills":
             st.markdown('<div class="ex-card-wrong">2. ___ you hungry?<br><br>❌ <b>Incorreto.</b> A resposta certa é <b>Are</b>.</div>', unsafe_allow_html=True)
         else:
             st.markdown('<div class="ex-card-neutral">2. ___ you hungry?</div>', unsafe_allow_html=True)
-            bc1, bc2, bc3 = st.columns([1, 1, 1])
-            with bc1:
-                if st.button("Is", key="btn_q2_is", use_container_width=True):
-                    st.session_state.respostas_submetidas["q2"] = "errado"
-                    st.rerun()
-            with bc2:
-                if st.button("Are", key="btn_q2_are", use_container_width=True):
-                    st.session_state.respostas_submetidas["q2"] = "correto"
-                    atualizar_progresso_no_sheets(st.session_state.usuario, xp_add=10, gems_add=2)
-                    st.rerun()
-            with bc3:
-                if st.button("Am", key="btn_q2_am", use_container_width=True):
-                    st.session_state.respostas_submetidas["q2"] = "errado"
-                    st.rerun()
-
-        # --- QUESTÃO 3 ---
-        status_q3 = st.session_state.respostas_submetidas.get("q3", None)
-        if status_q3 == "correto":
-            st.markdown('<div class="ex-card-correct">3. How old are you? – I ___ 15.<br><br>✅ <b>Isso!</b> Idade usa be: I am 15.</div>', unsafe_allow_html=True)
-        elif status_q3 == "errado":
-            st.markdown('<div class="ex-card-wrong">3. How old are you? – I ___ 15.<br><br>❌ <b>Ainda não.</b> A resposta certa é <b>am</b>.</div>', unsafe_allow_html=True)
-        else:
-            st.markdown('<div class="ex-card-neutral">3. How old are you? – I ___ 15.</div>', unsafe_allow_html=True)
-            bc1, bc2, bc3 = st.columns([1, 1, 1])
-            with bc1:
-                if st.button("have", key="btn_q3_have", use_container_width=True):
-                    st.session_state.respostas_submetidas["q3"] = "errado"
-                    st.rerun()
-            with bc2:
-                if st.button("am", key="btn_q3_am", use_container_width=True):
-                    st.session_state.respostas_submetidas["q3"] = "correto"
-                    atualizar_progresso_no_sheets(st.session_state.usuario, xp_add=10, gems_add=2)
-                    st.rerun()
-            with bc3:
-                if st.button("is", key="btn_q3_is", use_container_width=True):
-                    st.session_state.respostas_submetidas["q3"] = "errado"
-                    st.rerun()
-
-        # --- QUESTÃO 4 (Dissertativa com input sempre ativo para edição) ---
-        status_q4 = st.session_state.respostas_submetidas.get("q4", None)
-        if status_q4 == "correto":
-            st.markdown('<div class="ex-card-correct">4. Lucas <b>is</b> (be) my cousin.<br><br>✅ <b>Correto!</b> He → is.</div>', unsafe_allow_html=True)
-        elif status_q4 == "errado":
-            st.markdown('<div class="ex-card-wrong">4. Lucas _________ (be) my cousin.<br><br>❌ <b>Ainda não.</b> A parte correta é <b>is</b>. Edite abaixo e tente novamente.</div>', unsafe_allow_html=True)
-        else:
-            st.markdown('<div class="ex-card-neutral">4. Lucas _______________ (be) my cousin.</div>', unsafe_allow_html=True)
-
-        # Input de texto permanente para edição
-        txt_q4 = st.text_input("Escreva sua resposta para a Q4:", key="txt_q4", label_visibility="collapsed")
-        c_col1, c_col2 = st.columns([1, 1])
-        with c_col1:
-            if st.button("Conferir Q4", key="conf_q4"):
-                if txt_q4.strip().lower() == "is":
-                    st.session_state.respostas_submetidas["q4"] = "correto"
-                    atualizar_progresso_no_sheets(st.session_state.usuario, xp_add=10, gems_add=2)
-                else:
-                    st.session_state.respostas_submetidas["q4"] = "errado"
-                st.rerun()
-        with c_col2:
-            if st.button("Ver resposta Q4", key="resp_q4"):
-                st.info("Resposta correta: **is**")
-
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        # --- QUESTÃO 5 (Dissertativa com input sempre ativo para edição) ---
-        status_q5 = st.session_state.respostas_submetidas.get("q5", None)
-        if status_q5 == "correto":
-            st.markdown('<div class="ex-card-correct">5. I <b>am not</b> (not / be) from São Paulo.<br><br>✅ <b>Correto!</b></div>', unsafe_allow_html=True)
-        elif status_q5 == "errado":
-            st.markdown('<div class="ex-card-wrong">5. I _________ (not / be) from São Paulo.<br><br>❌ <b>Ainda não.</b> A parte correta é <b>am not</b>. Edite abaixo e tente novamente.</div>', unsafe_allow_html=True)
-        else:
-            st.markdown('<div class="ex-card-neutral">5. I _______________ (not / be) from São Paulo.</div>', unsafe_allow_html=True)
-
-        # Input de texto permanente para edição
-        txt_q5 = st.text_input("Escreva sua resposta para a Q5:", key="txt_q5", label_visibility="collapsed")
-        c_col1, c_col2 = st.columns([1, 1])
-        with c_col1:
-            if st.button("Conferir Q5", key="conf_q5"):
-                if txt_q5.strip().lower() in ["am not", "im not", "i'm not"]:
-                    st.session_state.respostas_submetidas["q5"] = "correto"
-                    atualizar_progresso_no_sheets(st.session_state.usuario, xp_add=10, gems_add=2)
-                else:
-                    st.session_state.respostas_submetidas["q5"] = "errado"
-                st.rerun()
-        with c_col2:
-            if st.button("Ver resposta Q5", key="resp_q5"):
-                st.info("Resposta correta: **am not** (ou **I'm not**)")
-
-    # ================= LISTA DA TRILHA DE APRENDIZADO =================
-    else:
-        st.title("🚀 Skills & Trilha de Aprendizado")
-        st.caption("Selecione qualquer tópico abaixo para abrir a lição completa, explicações e exercícios.")
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        st.markdown("""
-            <div style="display: flex; gap: 20px; font-size: 14px; color: #5c6b73; margin-bottom: 20px;">
-                <div>⚪ <b>Não começou</b></div>
-                <div>🟡 <b>Em andamento</b></div>
-                <div>🟢 <b>Completo</b></div>
-            </div>
-        """, unsafe_allow_html=True)
-
-        abas = st.tabs(["A1 · Iniciante", "A2 · Básico", "B1 · Intermediário", "B2 · Intermediário Superior"])
-
-        for idx, (nivel_key, dados_nivel) in enumerate(trilha_dados.items()):
-            with abas[idx]:
-                st.markdown(f"### {dados_nivel['titulo']}")
-                
-                topicos = dados_nivel["topicos"]
-                cols = st.columns(3)
-                
-                for t_idx, topico in enumerate(topicos):
-                    nome = topico["nome"]
-                    sub = topico["sub"]
-                    status = topico["status"]
-                    
-                    if status == "completo": icone_status = "🟢"
-                    elif status == "em_andamento": icone_status = "🟡"
-                    else: icone_status = "⚪"
-
-                    card_html = f"""
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <meta charset="utf-8">
-                        <style>
-                            body {{ font-family: 'Inter', sans-serif; margin:0; padding:2px; background: transparent; }}
-                            .skill-card {{
-                                background: white;
-                                border-radius: 14px;
-                                padding: 16px;
-                                box-shadow: 0 3px 10px rgba(0,0,0,0.04);
-                                border: 1px solid #eaeaea;
-                                height: 100px;
-                                box-sizing: border-box;
-                            }}
-                        </style>
-                    </head>
-                    <body>
-                        <div class="skill-card">
-                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                                <span style="font-size: 16px;">{icone_status}</span>
-                                <b style="color: #1e293b; font-size: 14px;">{nome}</b>
-                            </div>
-                            <p style="color: #64748b; font-size: 12px; margin: 0; padding-left: 24px;">{sub}</p>
-                        </div>
-                    </body>
-                    </html>
-                    """
-                    
-                    with cols[t_idx % 3]:
-                        components.html(card_html, height=110, scrolling=False)
-                        if st.button(f"Abrir Lição ➔", key=f"btn_{nivel_key}_{t_idx}"):
-                            st.session_state.topico_selecionado = nome
-                            st.rerun()
-
-elif pagina == "verbs":
-    st.title("Irregular Verbs")
-    st.caption("Lista completa de 144 verbos irregulares organizados por padrões de transformação")
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    verbos_lista = carregar_verbos_irregulares()
-    total_verbos = len(verbos_lista)
-
-    col_v1, col_v2, col_v3, col_v4 = st.columns(4)
-    with col_v1:
-        st.markdown(f'<div class="metric-card"><h3>{total_verbos}</h3><p style="color: #6b7a90; margin:0;">Total de Verbos</p></div>', unsafe_allow_html=True)
-    with col_v2:
-        st.markdown(f'<div class="metric-card"><h3>0</h3><p style="color: #6b7a90; margin:0;">Praticados</p></div>', unsafe_allow_html=True)
-    with col_v3:
-        st.markdown(f'<div class="metric-card"><h3>0</h3><p style="color: #6b7a90; margin:0;">Dominados</p></div>', unsafe_allow_html=True)
-    with col_v4:
-        st.markdown(f'<div class="metric-card"><h3>0%</h3><p style="color: #6b7a90; margin:0;">Taxa de Acerto</p></div>', unsafe_allow_html=True)
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    padroes_disponiveis = ["Todos os padrões"] + sorted(list({str(v.get("pattern", "")).strip() for v in verbos_lista if v.get("pattern")}))
-
-    with st.container():
-        st.markdown("### Filtros")
-        st.caption("Filtre verbos por padrão ou busque por texto")
-        f_col1, f_col2 = st.columns(2)
-        with f_col1:
-            filtro_padrao = st.selectbox("Padrão", padroes_disponiveis)
-        with f_col2:
-            busca_texto = st.text_input("Buscar", placeholder="Digite infinitivo, passado ou tradução...")
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    verbos_filtrados = verbos_lista
-    if filtro_padrao != "Todos os padrões":
-        verbos_filtrados = [v for v in verbos_filtrados if str(v.get("pattern", "")).strip() == filtro_padrao]
-    if busca_texto:
-        bt = busca_texto.lower()
-        verbos_filtrados = [
-            v for v in verbos_filtrados 
-            if bt in str(v.get("infinitive", "")).lower() 
-            or bt in str(v.get("past", "")).lower() 
-            or bt in str(v.get("translation", "")).lower()
-        ]
-
-    icon_svg = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"></path><path d="M16 9a5 5 0 0 1 0 6"></path><path d="M19.364 18.364a9 9 0 0 0 0-12.728"></path></svg>'
-
-    if verbos_filtrados:
-        cols = st.columns(3)
-        for i, verb in enumerate(verbos_filtrados):
-            inf = str(verb.get("infinitive", ""))
-            fon = str(verb.get("phonetic", ""))
-            past = str(verb.get("past", ""))
-            past_fon = str(verb.get("past_phonetic", ""))
-            part = str(verb.get("participle", ""))
-            part_fon = str(verb.get("part_phonetic", ""))
-            trans = str(verb.get("translation", ""))
-            ex = str(verb.get("example", ""))
-            pat = str(verb.get("pattern", ""))
-
-            card_html = f"""
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="utf-8">
-                <style>
-                    body {{
-                        font-family: 'Inter', sans-serif;
-                        margin: 0;
-                        padding: 2px;
-                        background-color: transparent;
-                    }}
-                    .verb-card {{
-                        background: white;
-                        border-radius: 16px;
-                        padding: 20px;
-                        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-                        border: 1px solid #eaeaea;
-                        box-sizing: border-box;
-                    }}
-                    .audio-action-btn {{
-                        display: inline-flex;
-                        align-items: center;
-                        justify-content: center;
-                        border-radius: 6px;
-                        background-color: transparent;
-                        border: 1px solid #e2e8f0;
-                        cursor: pointer;
-                        color: #4f67e8;
-                        transition: background 0.2s;
-                    }}
-                    .audio-action-btn:hover {{
-                        background-color: #f1f5f9;
-                    }}
-                </style>
-                <script>
-                function falar(texto) {{
-                    if ('speechSynthesis' in window) {{
-                        window.speechSynthesis.cancel();
-                        const utterance = new SpeechSynthesisUtterance(texto);
-                        utterance.lang = 'en-US';
-                        utterance.rate = 0.9;
-                        window.speechSynthesis.speak(utterance);
-                    }}
-                }}
-                </script>
-            </head>
-            <body>
-                <div class="verb-card">
-                    <span style="background-color: #fdf2f8; color: #db2777; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; float: right;">{pat}</span>
-                    
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <h3 style="margin:0; color:#1e293b; font-size: 20px;">{inf}</h3>
-                        <button class="audio-action-btn" style="width: 32px; height: 32px;" onclick="falar('{inf}')" title="Ouvir pronúncia: {inf}">{icon_svg}</button>
-                    </div>
-                    
-                    <p style="color:#64748b; font-size:13px; margin:2px 0 0 0;">{fon}</p>
-                    <hr style="margin:10px 0; border-top:1px solid #f1f5f9;">
-                    
-                    <div style="display:flex; justify-content:space-between; font-size:13px; gap: 10px;">
-                        <div>
-                            <b>Past Simple:</b><br>
-                            <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
-                                <span style="color:#4f67e8; font-weight:600;">{past}</span>
-                                <button class="audio-action-btn" style="width: 26px; height: 26px;" onclick="falar('{past}')" title="Ouvir pronúncia: {past}">{icon_svg}</button>
-                            </div>
-                            <span style="color:#94a3b8; font-size:11px;">{past_fon}</span>
-                        </div>
-                        <div>
-                            <b>Past Participle:</b><br>
-                            <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
-                                <span style="color:#4f67e8; font-weight:600;">{part}</span>
-                                <button class="audio-action-btn" style="width: 26px; height: 26px;" onclick="falar('{part}')" title="Ouvir pronúncia: {part}">{icon_svg}</button>
-                            </div>
-                            <span style="color:#94a3b8; font-size:11px;">{part_fon}</span>
-                        </div>
-                    </div>
-                    
-                    <p style="margin:12px 0 4px 0; font-size:13px;"><b>Tradução:</b> {trans}</p>
-                    <p style="margin:0; font-size:12px; color:#64748b; font-style:italic;">Exemplo: {ex}</p>
-                </div>
-            </body>
-            </html>
-            """
-            with cols[i % 3]:
-                components.html(card_html, height=230, scrolling=False)
-    else:
-        st.info("Nenhum verbo encontrado com os filtros selecionados.")
-
-elif pagina == "practice":
-    st.title("💬 Prática com Inteligência Artificial")
-    st.info("Inicie conversas e simulações para treinar conversação e escrita de acordo com o seu nível.")
