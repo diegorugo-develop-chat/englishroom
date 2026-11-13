@@ -47,42 +47,43 @@ def inject_theme():
             letter-spacing: -0.01em;
         }}
 
-        /* Esconde só o menu "⋮" e o rodapé. O cabeçalho continua visível
-           (transparente) para manter o botão de abrir/fechar a barra lateral. */
+        /* Esconde apenas o menu ⋮, o botão Deploy, o rodapé e a decoração */
         #MainMenu, footer {{ visibility: hidden; }}
+        [data-testid="stMainMenu"],
+        [data-testid="stAppDeployButton"],
+        [data-testid="stStatusWidget"],
+        [data-testid="stDecoration"] {{ display: none !important; }}
+
         [data-testid="stHeader"] {{
             background: transparent !important;
             box-shadow: none !important;
         }}
-        [data-testid="stToolbar"] {{ display: none; }}
-        [data-testid="stDecoration"] {{ display: none; }}
-        [data-testid="stStatusWidget"] {{ display: none; }}
 
-        /* Botão para reabrir o menu lateral quando ele estiver fechado */
+        /* ---- Barra lateral SEMPRE aberta ---- */
+        section[data-testid="stSidebar"] {{
+            display: block !important;
+            visibility: visible !important;
+            transform: none !important;
+            min-width: 280px !important;
+            width: 280px !important;
+            background: #FFFFFF;
+            border-right: 1px solid {COR_BORDA};
+        }}
+        section[data-testid="stSidebar"][aria-expanded="false"] {{
+            display: block !important;
+            transform: none !important;
+            margin-left: 0 !important;
+        }}
+        /* Esconde o botão de recolher e o de reabrir a barra */
+        [data-testid="stSidebarCollapseButton"],
         [data-testid="stSidebarCollapsedControl"],
         [data-testid="stExpandSidebarButton"],
         [data-testid="collapsedControl"] {{
-            display: flex !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            z-index: 999999 !important;
-            background: {COR_MARCA};
-            border-radius: 12px;
-            color: #FFFFFF;
-            box-shadow: 0 2px 8px rgba(200, 162, 124, 0.30);
-        }}
-        [data-testid="stSidebarCollapsedControl"] button,
-        [data-testid="stExpandSidebarButton"] button,
-        [data-testid="collapsedControl"] button {{
-            color: #FFFFFF !important;
+            display: none !important;
         }}
 
         .stApp {{ background-color: {COR_FUNDO}; }}
 
-        section[data-testid="stSidebar"] {{
-            background: #FFFFFF;
-            border-right: 1px solid {COR_BORDA};
-        }}
         section[data-testid="stSidebar"] > div:first-child {{
             display: flex;
             flex-direction: column;
@@ -346,8 +347,7 @@ def inject_theme():
 inject_theme()
 
 # ======================= CONEXÃO COM O GOOGLE SHEETS =======================
-# O cliente gspread fica em cache. Se a conexão falhar, a exceção não é guardada,
-# então a próxima tentativa refaz a conexão em vez de reutilizar um None antigo.
+# Só o cliente fica em cache. Se a conexão falhar, a próxima tentativa refaz a conexão.
 @st.cache_resource(show_spinner=False)
 def _cliente_gspread():
     if "gspread_credentials" in st.secrets:
@@ -462,6 +462,11 @@ if "autenticado" not in st.session_state:
     st.session_state.niveis = {}
     st.session_state.pagina_atual = "dashboard"
     st.session_state.topico_selecionado = None
+
+def trocar_pagina(pagina):
+    st.session_state.pagina_atual = pagina
+    st.session_state.topico_selecionado = None
+    st.rerun()
 
 def autenticar_por_email(email):
     """Busca o aluno pelo e-mail Google na planilha."""
@@ -599,7 +604,7 @@ if not st.session_state.autenticado:
 # ======================= SISTEMA PRINCIPAL =======================
 dados_progresso = carregar_progresso_usuario(st.session_state.usuario)
 
-# --- MENU LATERAL ---
+# --- MENU LATERAL (sempre visível) ---
 with st.sidebar:
     st.markdown(f"""
         <div style="padding: 0.5rem 0 1rem 0;">
@@ -623,28 +628,26 @@ with st.sidebar:
     st.caption(f"Níveis liberados: **{', '.join(niveis_ativos) if niveis_ativos else 'Nenhum'}**")
     st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
 
-    if st.button("📊  Dashboard", use_container_width=True, type="primary" if st.session_state.pagina_atual == "dashboard" else "secondary"):
-        st.session_state.pagina_atual = "dashboard"
-        st.session_state.topico_selecionado = None
-        st.rerun()
+    pagina_ativa = st.session_state.pagina_atual
 
-    if st.button("🚀  Trilha de aprendizado", use_container_width=True, type="primary" if st.session_state.pagina_atual == "skills" else "secondary"):
-        st.session_state.pagina_atual = "skills"
-        st.session_state.topico_selecionado = None
-        st.rerun()
+    if st.button("📊  Dashboard", key="side_dashboard", use_container_width=True,
+                 type="primary" if pagina_ativa == "dashboard" else "secondary"):
+        trocar_pagina("dashboard")
 
-    if st.button("🔄  Verbos irregulares", use_container_width=True, type="primary" if st.session_state.pagina_atual == "verbs" else "secondary"):
-        st.session_state.pagina_atual = "verbs"
-        st.session_state.topico_selecionado = None
-        st.rerun()
+    if st.button("🚀  Trilha de aprendizado", key="side_skills", use_container_width=True,
+                 type="primary" if pagina_ativa == "skills" else "secondary"):
+        trocar_pagina("skills")
 
-    if st.button("💬  Prática com IA", use_container_width=True, type="primary" if st.session_state.pagina_atual == "practice" else "secondary"):
-        st.session_state.pagina_atual = "practice"
-        st.session_state.topico_selecionado = None
-        st.rerun()
+    if st.button("🔄  Verbos irregulares", key="side_verbs", use_container_width=True,
+                 type="primary" if pagina_ativa == "verbs" else "secondary"):
+        trocar_pagina("verbs")
+
+    if st.button("💬  Prática com IA", key="side_practice", use_container_width=True,
+                 type="primary" if pagina_ativa == "practice" else "secondary"):
+        trocar_pagina("practice")
 
     st.markdown(f'<div style="margin-top:auto; padding-top:1rem; border-top:1px solid {COR_BORDA};"></div>', unsafe_allow_html=True)
-    if st.button("Sair", use_container_width=True, type="secondary"):
+    if st.button("Sair", key="side_sair", use_container_width=True, type="secondary"):
         realizar_logout()
 
     st.markdown(f"""
@@ -653,10 +656,26 @@ with st.sidebar:
         </div>
     """, unsafe_allow_html=True)
 
+# --- NAVEGAÇÃO NO TOPO (reserva, caso a lateral não apareça) ---
+opcoes_nav = [
+    ("dashboard", "📊 Dashboard"),
+    ("skills", "🚀 Trilha"),
+    ("verbs", "🔄 Verbos"),
+    ("practice", "💬 Prática IA"),
+]
+cols_nav = st.columns(len(opcoes_nav))
+for col, (chave, rotulo) in zip(cols_nav, opcoes_nav):
+    with col:
+        if st.button(rotulo, key=f"top_{chave}", use_container_width=True,
+                     type="primary" if st.session_state.pagina_atual == chave else "secondary"):
+            trocar_pagina(chave)
+
+st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
+
 
 # ======================= FUNÇÕES AUXILIARES DE VERBOS =======================
 def pegar_campo(registro, *nomes):
-    """Retorna o primeiro campo existente na linha, ignorando maiúsculas."""
+    """Retorna o primeiro campo preenchido, ignorando maiúsculas e espaços nos nomes das colunas."""
     mapa = {str(k).strip().lower(): v for k, v in registro.items()}
     for nome in nomes:
         valor = mapa.get(nome.lower())
@@ -724,7 +743,7 @@ if pagina == "dashboard":
         st.rerun()
 
 elif pagina == "skills":
-    # [COLE AQUI o dicionário trilha_dados completo, do arquivo original.]
+    # [COLE AQUI o dicionário trilha_dados completo do seu arquivo original.]
     trilha_dados = {}
 
     if st.session_state.get("topico_selecionado"):
@@ -828,7 +847,7 @@ elif pagina == "skills":
             st.markdown('<div class="ex-card-wrong">2. ___ you hungry?<br><br>❌ <b>Incorreto.</b> A resposta certa é <b>Are</b>.</div>', unsafe_allow_html=True)
         else:
             st.markdown('<div class="ex-card-neutral">2. ___ you hungry?</div>', unsafe_allow_html=True)
-        # [COLE AQUI o restante da aba Trilha, a partir da questão 3, do arquivo original.]
+        # [COLE AQUI o restante da aba Trilha, a partir da questão 3, do seu arquivo original.]
 
 elif pagina == "verbs":
     st.markdown('<div class="topic-header-tag">Verbos irregulares</div>', unsafe_allow_html=True)
@@ -859,4 +878,6 @@ elif pagina == "verbs":
         if exibidos == 0:
             st.warning("A planilha foi lida, mas nenhuma linha tem a coluna 'verbo' preenchida. Confira os cabeçalhos.")
 
-# [COLE AQUI o bloco elif pagina == "practice" (Prática com IA) do arquivo original.]
+elif pagina == "practice":
+    # [COLE AQUI o bloco da Prática com IA do seu arquivo original.]
+    st.info("Esta aba está em construção.")
