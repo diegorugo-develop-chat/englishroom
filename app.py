@@ -12,7 +12,7 @@ NOME_ABA_USUARIOS = "usuarios"
 NOME_ABA_PROGRESSO = "progresso"
 NOME_ABA_VERBOS = "verbos_irregulares"
 
-# ======================= PALETA (referências visuais) =======================
+# ======================= PALETA =======================
 COR_MARCA = "#C8A27C"
 COR_MARCA_ESCURA = "#8B6F4E"
 COR_AMARELO = "#FAD54B"
@@ -47,10 +47,35 @@ def inject_theme():
             letter-spacing: -0.01em;
         }}
 
-        #MainMenu, footer, header {{ visibility: hidden; }}
+        /* Esconde só o menu "⋮" e o rodapé. O cabeçalho continua visível
+           (transparente) para manter o botão de abrir/fechar a barra lateral. */
+        #MainMenu, footer {{ visibility: hidden; }}
+        [data-testid="stHeader"] {{
+            background: transparent !important;
+            box-shadow: none !important;
+        }}
         [data-testid="stToolbar"] {{ display: none; }}
         [data-testid="stDecoration"] {{ display: none; }}
         [data-testid="stStatusWidget"] {{ display: none; }}
+
+        /* Botão para reabrir o menu lateral quando ele estiver fechado */
+        [data-testid="stSidebarCollapsedControl"],
+        [data-testid="stExpandSidebarButton"],
+        [data-testid="collapsedControl"] {{
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            z-index: 999999 !important;
+            background: {COR_MARCA};
+            border-radius: 12px;
+            color: #FFFFFF;
+            box-shadow: 0 2px 8px rgba(200, 162, 124, 0.30);
+        }}
+        [data-testid="stSidebarCollapsedControl"] button,
+        [data-testid="stExpandSidebarButton"] button,
+        [data-testid="collapsedControl"] button {{
+            color: #FFFFFF !important;
+        }}
 
         .stApp {{ background-color: {COR_FUNDO}; }}
 
@@ -622,16 +647,16 @@ with st.sidebar:
     if st.button("Sair", use_container_width=True, type="secondary"):
         realizar_logout()
 
-    st.markdown("""
-        <div style="text-align:center; font-size:0.7rem; color:%s; padding-top:8px; letter-spacing:1px; font-weight:700;">
+    st.markdown(f"""
+        <div style="text-align:center; font-size:0.7rem; color:{COR_TEXTO_SUAVE}; padding-top:8px; letter-spacing:1px; font-weight:700;">
             XOXO
         </div>
-    """ % COR_TEXTO_SUAVE, unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
 
 # ======================= FUNÇÕES AUXILIARES DE VERBOS =======================
 def pegar_campo(registro, *nomes):
-    """Retorna o primeiro campo existente na linha, ignorando maiúsculas e acentos simples."""
+    """Retorna o primeiro campo existente na linha, ignorando maiúsculas."""
     mapa = {str(k).strip().lower(): v for k, v in registro.items()}
     for nome in nomes:
         valor = mapa.get(nome.lower())
@@ -699,9 +724,9 @@ if pagina == "dashboard":
         st.rerun()
 
 elif pagina == "skills":
-    # [COLE AQUI o restante da trilha que estava depois da questão 2 do A1
-    #  e o restante do dicionário trilha_dados, sem alterações.]
-    trilha_dados = {}  # <- substitua pelo dicionário completo da trilha
+    # [COLE AQUI o dicionário trilha_dados completo, do arquivo original.]
+    trilha_dados = {}
+
     if st.session_state.get("topico_selecionado"):
         topico = st.session_state.topico_selecionado
         col_voltar, col_vazia = st.columns([1, 4])
@@ -803,7 +828,7 @@ elif pagina == "skills":
             st.markdown('<div class="ex-card-wrong">2. ___ you hungry?<br><br>❌ <b>Incorreto.</b> A resposta certa é <b>Are</b>.</div>', unsafe_allow_html=True)
         else:
             st.markdown('<div class="ex-card-neutral">2. ___ you hungry?</div>', unsafe_allow_html=True)
-        # [COLE AQUI o restante da aba Trilha, a partir da questão 3 e do que vem depois.]
+        # [COLE AQUI o restante da aba Trilha, a partir da questão 3, do arquivo original.]
 
 elif pagina == "verbs":
     st.markdown('<div class="topic-header-tag">Verbos irregulares</div>', unsafe_allow_html=True)
@@ -825,7 +850,7 @@ elif pagina == "verbs":
             if not base:
                 continue
             passado = pegar_campo(registro, "passado", "past", "simple past")
-            participio = pegar_campo(registro, "particípio", "particípio", "participio", "past participle", "pp")
+            participio = pegar_campo(registro, "particípio", "participio", "past participle", "pp")
             traducao = pegar_campo(registro, "tradução", "traducao", "significado", "translation")
             with colunas[exibidos % 3]:
                 card_verbo(base, passado, participio, traducao)
@@ -834,4 +859,4 @@ elif pagina == "verbs":
         if exibidos == 0:
             st.warning("A planilha foi lida, mas nenhuma linha tem a coluna 'verbo' preenchida. Confira os cabeçalhos.")
 
-# [COLE AQUI o bloco da aba "practice" (Prática com IA) que estava no seu arquivo original.]
+# [COLE AQUI o bloco elif pagina == "practice" (Prática com IA) do arquivo original.]
