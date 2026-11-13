@@ -1,5 +1,6 @@
 import json
 import html
+import unicodedata
 import gspread
 import streamlit as st
 import streamlit.components.v1 as components
@@ -650,26 +651,47 @@ for col, (chave, rotulo) in zip(cols_nav, [
 st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
 
 # ======================= FUNÇÕES DE VERBOS =======================
-def pegar_campo(registro, *nomes):
-    """Retorna o primeiro campo preenchido, ignorando maiúsculas e espaços nos nomes das colunas."""
-    mapa = {str(k).strip().lower(): v for k, v in registro.items()}
-    for nome in nomes:
-        valor = mapa.get(nome.lower())
+def _chave_normalizada(texto):
+    """Minúsculas, sem acento, sem espaços extras; '_' e '-' viram espaço."""
+    t = unicodedata.normalize("NFKD", str(texto)).encode("ascii", "ignore").decode("ascii")
+    t = t.lower().replace("_", " ").replace("-", " ")
+    return " ".join(t.split())
+
+def _buscar_coluna(registro, *candidatos):
+    """Retorna o valor da primeira coluna cujo nome (normalizado) bate com um dos candidatos."""
+    mapa = {_chave_normalizada(k): v for k, v in registro.items()}
+    for cand in candidatos:
+        valor = mapa.get(_chave_normalizada(cand))
         if valor not in (None, ""):
             return str(valor).strip()
     return ""
 
+def _achar_participio(registro):
+    """Tenta pelos nomes conhecidos; se não bater, procura qualquer coluna com 'particip' no nome."""
+    valor = _buscar_coluna(
+        registro,
+        "particípio", "particípio passado", "participio",
+        "past participle", "participle", "pp",
+    )
+    if valor:
+        return valor
+    for k, v in registro.items():
+        chave = _chave_normalizada(k)
+        if ("particip" in chave or "participle" in chave) and v not in (None, ""):
+            return str(v).strip()
+    return ""
+
 def normalizar_verbo(registro):
     return {
-        "base": pegar_campo(registro, "verbo", "infinitivo", "base", "infinitive"),
-        "passado": pegar_campo(registro, "passado", "past", "simple past"),
-        "participio": pegar_campo(registro, "particípio", "participio", "past participle", "pp"),
-        "traducao": pegar_campo(registro, "tradução", "traducao", "significado", "translation"),
-        "exemplo": pegar_campo(registro, "exemplo", "example"),
-        "padrao": pegar_campo(registro, "padrão", "padrao", "pattern"),
-        "fon_base": pegar_campo(registro, "fonetica", "fonética", "pronuncia", "ipa"),
-        "fon_passado": pegar_campo(registro, "fonetica_passado", "fonética_passado"),
-        "fon_participio": pegar_campo(registro, "fonetica_participio", "fonética_particípio"),
+        "base": _buscar_coluna(registro, "verbo", "infinitivo", "base", "infinitive"),
+        "passado": _buscar_coluna(registro, "passado", "past", "simple past", "past simple"),
+        "participio": _achar_participio(registro),
+        "traducao": _buscar_coluna(registro, "tradução", "traducao", "significado", "translation"),
+        "exemplo": _buscar_coluna(registro, "exemplo", "example"),
+        "padrao": _buscar_coluna(registro, "padrão", "padrao", "pattern"),
+        "fon_base": _buscar_coluna(registro, "fonetica", "fonética", "pronuncia", "ipa"),
+        "fon_passado": _buscar_coluna(registro, "fonetica passado", "fonética passado", "ipa passado"),
+        "fon_participio": _buscar_coluna(registro, "fonetica participio", "fonetica particípio", "ipa participio"),
     }
 
 def _bloco_forma(rotulo, forma, fonetica):
@@ -830,7 +852,6 @@ def renderizar_detalhe_verb_to_be():
     st.markdown(f"**{acertos} / 2 acertos**")
     st.progress(acertos / 2)
 
-    # Questão 1
     status_q1 = st.session_state.respostas_submetidas.get("q1")
     if status_q1 == "correto":
         st.markdown('<div class="ex-card-correct">1. My friends ___ very funny.<br><br>✅ <b>Isso!</b> A resposta é <b>are</b>. <i>My friends</i> = they → are.</div>', unsafe_allow_html=True)
@@ -853,7 +874,6 @@ def renderizar_detalhe_verb_to_be():
                 atualizar_progresso_no_sheets(st.session_state.usuario, xp_add=10, gems_add=2)
                 st.rerun()
 
-    # Questão 2
     status_q2 = st.session_state.respostas_submetidas.get("q2")
     if status_q2 == "correto":
         st.markdown('<div class="ex-card-correct">2. ___ you hungry?<br><br>✅ <b>Isso!</b> Pergunta com <i>you</i> → Are.</div>', unsafe_allow_html=True)
@@ -948,7 +968,8 @@ elif pagina == "verbs":
     if "verbos_status" not in st.session_state:
         st.session_state.verbos_status = {}
 
-    verbos = [v for v in (normalizar_verbo(r) for r in carregar_verbos_irregulares()) if v["base"]]
+    registros_brutos = carregar_verbos_irregulares()
+    verbos = [v for v in (normalizar_verbo(r) for r in registros_brutos) if v["base"]]
     status_map = st.session_state.verbos_status
 
     total = len(verbos)
@@ -970,6 +991,13 @@ elif pagina == "verbs":
             "se a primeira linha tem os cabeçalhos e se a conexão com o Google Sheets está ativa."
         )
     else:
+        # Diagnóstico: mostra os cabeçalhos lidos da planilha e se o particípio foi encontrado
+        with st.expander("Diagnóstico das colunas lidas da planilha"):
+            cabecalhos = list(registros_brutos[0].keys()) if registros_brutos else []
+            st.write("Colunas encontradas:", cabecalhos)
+            sem_participio = sum(1 for v in verbos if not v["participio"])
+            st.write(f"Verbos sem Past Participle preenchido: {sem_participio} de {total}")
+
         m1, m2, m3, m4 = st.columns(4, gap="small")
         with m1:
             st.markdown(f'<div class="metric-card"><h3>{total}</h3><p>Total de verbos</p></div>', unsafe_allow_html=True)
