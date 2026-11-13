@@ -11,13 +11,17 @@ NOME_ABA_USUARIOS = "usuarios"
 NOME_ABA_PROGRESSO = "progresso"
 NOME_ABA_VERBOS = "verbos_irregulares"
 
-# Paleta da marca
-COR_MARCA = "#1F4E5F"
-COR_MARCA_CLARA = "#2E6B7E"
-COR_FUNDO = "#F5F7F8"
-COR_TEXTO = "#1A1A1A"
-COR_TEXTO_SUAVE = "#4A5568"
-COR_BORDA = "#E6EAED"
+# ======================= PALETA (extraída das referências) =======================
+COR_MARCA = "#C8A27C"          # ocre terroso
+COR_MARCA_ESCURA = "#8B6F4E"   # ocre profundo
+COR_AMARELO = "#FAD54B"        # amarelo dourado
+COR_ROSA = "#FADADD"           # rosa pastel
+COR_VERDE = "#2D5A27"          # verde botânico
+COR_CEU = "#87CEEB"            # azul céu
+COR_FUNDO = "#FDFBF7"          # off-white quente
+COR_TEXTO = "#2B2622"          # marrom quase preto
+COR_TEXTO_SUAVE = "#6B5F55"
+COR_BORDA = "#EDE4D8"
 
 st.set_page_config(
     page_title="CarolEnglish — Aulas de inglês",
@@ -30,10 +34,16 @@ st.set_page_config(
 def inject_theme():
     st.markdown(f"""
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700;800&family=Nunito:wght@400;500;600;700;800&display=swap');
 
         html, body, [class*="css"] {{
-            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-family: 'Nunito', sans-serif;
+            color: {COR_TEXTO};
+        }}
+
+        h1, h2, h3 {{
+            font-family: 'Fraunces', serif;
+            letter-spacing: -0.01em;
         }}
 
         /* Oculta a barra do Streamlit */
@@ -42,9 +52,7 @@ def inject_theme():
         [data-testid="stDecoration"] {{ display: none; }}
         [data-testid="stStatusWidget"] {{ display: none; }}
 
-        .stApp {{
-            background-color: {COR_FUNDO};
-        }}
+        .stApp {{ background-color: {COR_FUNDO}; }}
 
         /* Sidebar */
         section[data-testid="stSidebar"] {{
@@ -61,88 +69,104 @@ def inject_theme():
             width: 100%;
             justify-content: flex-start;
             border: none;
-            border-radius: 10px;
+            border-radius: 12px;
             padding: 0.7rem 1rem;
             background: transparent;
             color: {COR_TEXTO_SUAVE};
-            font-weight: 600;
+            font-weight: 700;
             font-size: 14px;
             text-align: left;
             transition: all 0.15s ease;
         }}
         section[data-testid="stSidebar"] .stButton button:hover {{
-            background: #EEF3F5;
-            color: {COR_MARCA};
+            background: {COR_ROSA};
+            color: {COR_MARCA_ESCURA};
         }}
         section[data-testid="stSidebar"] .stButton button[kind="primary"] {{
             background: {COR_MARCA};
             color: #FFFFFF;
-            box-shadow: 0 2px 8px rgba(31, 78, 95, 0.20);
+            box-shadow: 0 2px 8px rgba(200, 162, 124, 0.30);
         }}
 
         /* Botões gerais */
         .stButton > button {{
-            border-radius: 10px;
-            font-weight: 600;
+            border-radius: 12px;
+            font-weight: 700;
             padding: 0.6rem 1.2rem;
             transition: all 0.15s ease;
         }}
 
         /* Banner de boas-vindas */
         .welcome-banner {{
-            background: {COR_MARCA};
-            border-radius: 16px;
-            padding: 28px 32px;
-            color: white;
+            background: linear-gradient(120deg, {COR_MARCA} 0%, #D9B894 100%);
+            border-radius: 20px;
+            padding: 30px 34px;
+            color: #FFFFFF;
             margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }}
+        .welcome-banner::after {{
+            content: "✦";
+            position: absolute;
+            right: 28px;
+            top: 18px;
+            font-size: 2.2rem;
+            color: {COR_AMARELO};
+            opacity: 0.85;
         }}
         .welcome-banner h2 {{
             margin: 0 0 6px 0;
-            font-size: 1.6rem;
+            font-size: 1.7rem;
             font-weight: 700;
+            color: #FFFFFF;
         }}
         .welcome-banner p {{
             margin: 0;
-            opacity: 0.85;
+            opacity: 0.92;
             font-size: 0.95rem;
         }}
 
-        /* Cards de métrica com altura uniforme */
+        /* Cards de métrica */
         .metric-card {{
             background: #FFFFFF;
-            border-radius: 14px;
+            border-radius: 16px;
             padding: 20px 16px;
             border: 1px solid {COR_BORDA};
             text-align: center;
-            min-height: 108px;
+            min-height: 112px;
             display: flex;
             flex-direction: column;
             justify-content: center;
         }}
         .metric-card h3 {{
             margin: 0 0 4px 0;
-            font-size: 1.9rem;
-            font-weight: 700;
-            color: {COR_MARCA};
+            font-size: 2rem;
+            font-weight: 800;
+            color: {COR_MARCA_ESCURA};
+            font-family: 'Fraunces', serif;
         }}
         .metric-card p {{
             margin: 0;
             color: {COR_TEXTO_SUAVE};
-            font-size: 0.85rem;
-            font-weight: 500;
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
         }}
 
         /* Página de lição */
         .topic-header-tag {{
-            color: {COR_MARCA};
-            font-weight: 700;
-            font-size: 13px;
-            letter-spacing: 0.5px;
+            color: {COR_MARCA_ESCURA};
+            font-weight: 800;
+            font-size: 12px;
+            letter-spacing: 1px;
             text-transform: uppercase;
             margin-bottom: 4px;
         }}
         .topic-title {{
-            font-size: 34px;
+            font-family: 'Fraunces', serif;
+            font-size: 36px;
             font-weight: 800;
             color: {COR_TEXTO};
             margin: 0 0 8px 0;
@@ -156,8 +180,8 @@ def inject_theme():
         .section-tag {{
             font-size: 11px;
             font-weight: 800;
-            letter-spacing: 1px;
-            color: {COR_TEXTO_SUAVE};
+            letter-spacing: 1.2px;
+            color: {COR_MARCA_ESCURA};
             text-transform: uppercase;
             margin-top: 24px;
             margin-bottom: 12px;
@@ -165,16 +189,16 @@ def inject_theme():
         .info-box-light {{
             background: #FFFFFF;
             border: 1px solid {COR_BORDA};
-            border-radius: 14px;
+            border-radius: 16px;
             padding: 20px;
             margin-bottom: 16px;
-            color: #334155;
+            color: {COR_TEXTO};
             font-size: 15px;
-            line-height: 1.65;
+            line-height: 1.7;
         }}
         .struct-row {{
-            background: {COR_FUNDO};
-            border-radius: 8px;
+            background: #FBF7F1;
+            border-radius: 10px;
             padding: 12px 18px;
             margin-bottom: 8px;
             display: flex;
@@ -185,47 +209,47 @@ def inject_theme():
         .struct-symbol {{
             font-weight: bold;
             width: 30px;
-            color: {COR_MARCA};
+            color: {COR_MARCA_ESCURA};
         }}
         .tip-card-green {{
-            background: #F0FDF4;
-            border: 1px solid #BBF7D0;
-            border-radius: 12px;
+            background: #F3F8F1;
+            border: 1px solid #CFE3C8;
+            border-radius: 14px;
             padding: 16px;
-            color: #166534;
+            color: {COR_VERDE};
             font-size: 14px;
-            line-height: 1.6;
+            line-height: 1.65;
         }}
         .error-card {{
             background: #FFFFFF;
             border: 1px solid {COR_BORDA};
-            border-radius: 12px;
+            border-radius: 14px;
             padding: 16px;
             font-size: 14px;
         }}
         .err-wrong {{
-            color: #DC2626;
+            color: #B4453C;
             text-decoration: line-through;
-            font-weight: 600;
+            font-weight: 700;
         }}
         .err-correct {{
-            color: #16A34A;
-            font-weight: 700;
+            color: {COR_VERDE};
+            font-weight: 800;
         }}
 
         /* Cards de exercício */
         .ex-card-correct {{
-            background-color: #F0FDF4;
-            border: 1px solid #BBF7D0;
-            border-radius: 14px;
+            background-color: #F3F8F1;
+            border: 1px solid #CFE3C8;
+            border-radius: 16px;
             padding: 20px;
             margin-bottom: 16px;
             font-size: 15px;
         }}
         .ex-card-wrong {{
-            background-color: #FEF2F2;
-            border: 1px solid #FECACA;
-            border-radius: 14px;
+            background-color: #FDF3F2;
+            border: 1px solid #F2D5D2;
+            border-radius: 16px;
             padding: 20px;
             margin-bottom: 16px;
             font-size: 15px;
@@ -233,42 +257,52 @@ def inject_theme():
         .ex-card-neutral {{
             background-color: #FFFFFF;
             border: 1px solid {COR_BORDA};
-            border-radius: 14px;
+            border-radius: 16px;
             padding: 20px;
             margin-bottom: 16px;
             font-size: 15px;
         }}
 
         /* Login */
-        .login-hero {{
-            padding: 2rem 1rem 2rem 0;
-        }}
         .login-hero h1 {{
-            color: {COR_MARCA};
-            font-size: 2.3rem;
-            line-height: 1.25;
+            font-family: 'Fraunces', serif;
+            color: {COR_MARCA_ESCURA};
+            font-size: 2.5rem;
+            line-height: 1.2;
             font-weight: 800;
             margin: 0 0 1rem 0;
         }}
         .login-hero p {{
             font-size: 1.05rem;
             color: {COR_TEXTO_SUAVE};
-            line-height: 1.65;
+            line-height: 1.7;
             margin: 0 0 1.5rem 0;
         }}
         .login-hero .destaque {{
             font-size: 0.95rem;
-            color: #718096;
+            color: {COR_TEXTO_SUAVE};
+        }}
+        .login-badge {{
+            display: inline-block;
+            background: {COR_ROSA};
+            color: {COR_MARCA_ESCURA};
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            padding: 6px 14px;
+            border-radius: 20px;
+            margin-bottom: 1.2rem;
         }}
         .login-footer {{
             text-align: center;
             font-size: 0.85rem;
-            color: #718096;
+            color: {COR_TEXTO_SUAVE};
             margin-top: 1rem;
         }}
         .login-footer a {{
-            color: {COR_MARCA};
-            font-weight: 600;
+            color: {COR_MARCA_ESCURA};
+            font-weight: 800;
             text-decoration: none;
         }}
     </style>
@@ -434,12 +468,7 @@ def realizar_logout():
 
 # ======================= TELA DE LOGIN =======================
 if not st.session_state.autenticado:
-    st.markdown(f"""
-        <style>
-            .stApp {{ background: #FFFFFF; }}
-        </style>
-    """, unsafe_allow_html=True)
-
+    st.markdown(f"<style>.stApp {{ background: {COR_FUNDO}; }}</style>", unsafe_allow_html=True)
     st.markdown("<div style='height: 6vh'></div>", unsafe_allow_html=True)
 
     col_esq, col_dir = st.columns([1.15, 1], gap="large")
@@ -447,9 +476,10 @@ if not st.session_state.autenticado:
     with col_esq:
         st.markdown(f"""
             <div class="login-hero">
-                <h1>Inglês que você usa<br>na vida real</h1>
+                <div class="login-badge">English Teacher · Aulas 1:1</div>
+                <h1>I've tried everything.<br>Nothing made me as happy<br>as teaching English.</h1>
                 <p>
-                    Aulas particulares 1:1 com trilha personalizada,
+                    Aulas particulares com trilha personalizada,
                     prática de conversação e acompanhamento de progresso.
                 </p>
                 <p class="destaque">
@@ -461,31 +491,18 @@ if not st.session_state.autenticado:
     with col_dir:
         st.markdown("<div style='height: 6vh'></div>", unsafe_allow_html=True)
         with st.container(border=True):
-            st.markdown(f"<h3 style='margin-bottom:0.2rem; color:{COR_TEXTO};'>Entrar na sua conta</h3>", unsafe_allow_html=True)
+            st.markdown(f"<h3 style='margin-bottom:0.2rem; font-family:Fraunces,serif; color:{COR_TEXTO};'>Entrar na sua conta</h3>", unsafe_allow_html=True)
             st.markdown(f"<p style='color:{COR_TEXTO_SUAVE}; font-size:0.9rem; margin-bottom:1rem;'>Use o acesso enviado pela professora.</p>", unsafe_allow_html=True)
 
             with st.form("login_form", clear_on_submit=False):
-                usuario_input = st.text_input(
-                    "E-mail ou usuário",
-                    placeholder="seu@email.com",
-                    autocomplete="off"
-                )
-                senha_input = st.text_input(
-                    "Senha",
-                    type="password",
-                    placeholder="Sua senha",
-                    autocomplete="off"
-                )
-                btn_entrar = st.form_submit_button(
-                    "Entrar",
-                    type="primary",
-                    use_container_width=True
-                )
+                usuario_input = st.text_input("E-mail ou usuário", placeholder="seu@email.com", autocomplete="off")
+                senha_input = st.text_input("Senha", type="password", placeholder="Sua senha", autocomplete="off")
+                btn_entrar = st.form_submit_button("Entrar", type="primary", use_container_width=True)
 
             st.markdown(f"""
                 <p class="login-footer">
                     Ainda não tem conta?
-                    <a href="https://carolineenglish.com.br">Conheça as aulas</a>
+                    <a href="https://instagram.com/teacher.carolinealencar">Fale com a teacher</a>
                 </p>
             """, unsafe_allow_html=True)
 
@@ -505,16 +522,19 @@ dados_progresso = carregar_progresso_usuario(st.session_state.usuario)
 with st.sidebar:
     st.markdown(f"""
         <div style="padding: 0.5rem 0 1rem 0;">
-            <div style="font-size:1.15rem; font-weight:800; color:{COR_MARCA};">
-                💜 CarolEnglish
+            <div style="font-size:1.15rem; font-weight:800; color:{COR_MARCA_ESCURA}; font-family:Fraunces,serif;">
+                CarolEnglish
+            </div>
+            <div style="font-size:0.72rem; color:{COR_TEXTO_SUAVE}; letter-spacing:1px; text-transform:uppercase; font-weight:700; margin-top:2px;">
+                English Teacher
             </div>
         </div>
     """, unsafe_allow_html=True)
 
     st.markdown(f"""
-        <div style="background:{COR_FUNDO}; border-radius:10px; padding:12px 14px; margin-bottom:16px;">
-            <div style="font-size:0.8rem; color:#718096; margin-bottom:2px;">Aluna(o)</div>
-            <div style="font-weight:700; color:{COR_TEXTO}; font-size:0.95rem;">{st.session_state.nome}</div>
+        <div style="background:{COR_ROSA}; border-radius:12px; padding:12px 14px; margin-bottom:16px;">
+            <div style="font-size:0.75rem; color:{COR_MARCA_ESCURA}; margin-bottom:2px; font-weight:700;">Aluna(o)</div>
+            <div style="font-weight:800; color:{COR_TEXTO}; font-size:0.95rem;">{st.session_state.nome}</div>
         </div>
     """, unsafe_allow_html=True)
 
@@ -543,9 +563,15 @@ with st.sidebar:
         st.rerun()
 
     # Logout fixo no rodapé
-    st.markdown('<div style="margin-top:auto; padding-top:1rem; border-top:1px solid #E6EAED;"></div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="margin-top:auto; padding-top:1rem; border-top:1px solid {COR_BORDA};"></div>', unsafe_allow_html=True)
     if st.button("Sair", use_container_width=True, type="secondary"):
         realizar_logout()
+
+    st.markdown(f"""
+        <div style="text-align:center; font-size:0.7rem; color:{COR_TEXTO_SUAVE}; padding-top:8px; letter-spacing:1px; font-weight:700;">
+            XOXO
+        </div>
+    """, unsafe_allow_html=True)
 
 
 # --- CORTE DE PÁGINAS ---
@@ -668,24 +694,24 @@ elif pagina == "skills":
         st.markdown(f'<h1 class="topic-title">{topico}</h1>', unsafe_allow_html=True)
         st.markdown('<div class="topic-subtitle">O verbo que significa <b>ser</b> e <b>estar</b> ao mesmo tempo.</div>', unsafe_allow_html=True)
 
-        st.markdown("""
+        st.markdown(f"""
             <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px;">
-                <span style="background:#EEF3F5; padding: 6px 14px; border-radius: 20px; font-size:13px; font-weight:600; color:#1F4E5F;">A ideia</span>
-                <span style="background:#EEF3F5; padding: 6px 14px; border-radius: 20px; font-size:13px; font-weight:600; color:#1F4E5F;">Estrutura</span>
-                <span style="background:#EEF3F5; padding: 6px 14px; border-radius: 20px; font-size:13px; font-weight:600; color:#1F4E5F;">Exemplos</span>
-                <span style="background:#EEF3F5; padding: 6px 14px; border-radius: 20px; font-size:13px; font-weight:600; color:#1F4E5F;">Dicas</span>
-                <span style="background:#EEF3F5; padding: 6px 14px; border-radius: 20px; font-size:13px; font-weight:600; color:#1F4E5F;">Erros comuns</span>
-                <span style="background:#EEF3F5; padding: 6px 14px; border-radius: 20px; font-size:13px; font-weight:600; color:#1F4E5F;">Pratique</span>
+                <span style="background:{COR_ROSA}; padding: 6px 14px; border-radius: 20px; font-size:13px; font-weight:700; color:{COR_MARCA_ESCURA};">A ideia</span>
+                <span style="background:{COR_ROSA}; padding: 6px 14px; border-radius: 20px; font-size:13px; font-weight:700; color:{COR_MARCA_ESCURA};">Estrutura</span>
+                <span style="background:{COR_ROSA}; padding: 6px 14px; border-radius: 20px; font-size:13px; font-weight:700; color:{COR_MARCA_ESCURA};">Exemplos</span>
+                <span style="background:{COR_ROSA}; padding: 6px 14px; border-radius: 20px; font-size:13px; font-weight:700; color:{COR_MARCA_ESCURA};">Dicas</span>
+                <span style="background:{COR_ROSA}; padding: 6px 14px; border-radius: 20px; font-size:13px; font-weight:700; color:{COR_MARCA_ESCURA};">Erros comuns</span>
+                <span style="background:{COR_ROSA}; padding: 6px 14px; border-radius: 20px; font-size:13px; font-weight:700; color:{COR_MARCA_ESCURA};">Pratique</span>
             </div>
         """, unsafe_allow_html=True)
 
         # A IDEIA
         st.markdown('<div class="section-tag">A IDEIA</div>', unsafe_allow_html=True)
-        st.markdown("""
+        st.markdown(f"""
             <div class="info-box-light">
                 Usamos o <b>to be</b> para dizer quem somos, de onde somos, nossa idade, profissão, como estamos e onde estamos.
                 Em português temos dois verbos (ser e estar); em inglês, um só faz os dois papéis. Ele muda conforme a pessoa:
-                <b style="color:#1F4E5F;">am</b> com I, <b style="color:#1F4E5F;">is</b> com he/she/it e <b style="color:#1F4E5F;">are</b> com you/we/they.
+                <b style="color:{COR_MARCA_ESCURA};">am</b> com I, <b style="color:{COR_MARCA_ESCURA};">is</b> com he/she/it e <b style="color:{COR_MARCA_ESCURA};">are</b> com you/we/they.
             </div>
         """, unsafe_allow_html=True)
 
@@ -725,9 +751,9 @@ elif pagina == "skills":
             st.markdown('<div class="section-tag">ERROS COMUNS</div>', unsafe_allow_html=True)
             st.markdown("""
                 <div class="error-card">
-                    <span class="err-wrong">I have 13 years.</span><br><span class="err-correct">I am 13 years old.</span><br><small style="color:#64748b;">Idade usa be, não have.</small>
-                    <hr style="margin: 8px 0; border-top:1px solid #f1f5f9;">
-                    <span class="err-wrong">She are my sister.</span><br><span class="err-correct">She is my sister.</span><br><small style="color:#64748b;">Com he/she/it, use sempre is.</small>
+                    <span class="err-wrong">I have 13 years.</span><br><span class="err-correct">I am 13 years old.</span><br><small style="color:#6B5F55;">Idade usa be, não have.</small>
+                    <hr style="margin: 8px 0; border-top:1px solid #F1EAE0;">
+                    <span class="err-wrong">She are my sister.</span><br><span class="err-correct">She is my sister.</span><br><small style="color:#6B5F55;">Com he/she/it, use sempre is.</small>
                 </div>
             """, unsafe_allow_html=True)
 
