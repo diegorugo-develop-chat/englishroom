@@ -2,3 +2,4 @@ streamlit[auth]
 gspread
 pandas
 google-auth
+authlib
