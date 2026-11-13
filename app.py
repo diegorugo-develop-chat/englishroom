@@ -11,15 +11,15 @@ NOME_ABA_USUARIOS = "usuarios"
 NOME_ABA_PROGRESSO = "progresso"
 NOME_ABA_VERBOS = "verbos_irregulares"
 
-# ======================= PALETA (extraída das referências) =======================
-COR_MARCA = "#C8A27C"          # ocre terroso
-COR_MARCA_ESCURA = "#8B6F4E"   # ocre profundo
-COR_AMARELO = "#FAD54B"        # amarelo dourado
-COR_ROSA = "#FADADD"           # rosa pastel
-COR_VERDE = "#2D5A27"          # verde botânico
-COR_CEU = "#87CEEB"            # azul céu
-COR_FUNDO = "#FDFBF7"          # off-white quente
-COR_TEXTO = "#2B2622"          # marrom quase preto
+# ======================= PALETA (referências visuais) =======================
+COR_MARCA = "#C8A27C"
+COR_MARCA_ESCURA = "#8B6F4E"
+COR_AMARELO = "#FAD54B"
+COR_ROSA = "#FADADD"
+COR_VERDE = "#2D5A27"
+COR_CEU = "#87CEEB"
+COR_FUNDO = "#FDFBF7"
+COR_TEXTO = "#2B2622"
 COR_TEXTO_SUAVE = "#6B5F55"
 COR_BORDA = "#EDE4D8"
 
@@ -46,7 +46,6 @@ def inject_theme():
             letter-spacing: -0.01em;
         }}
 
-        /* Oculta a barra do Streamlit */
         #MainMenu, footer, header {{ visibility: hidden; }}
         [data-testid="stToolbar"] {{ display: none; }}
         [data-testid="stDecoration"] {{ display: none; }}
@@ -54,7 +53,6 @@ def inject_theme():
 
         .stApp {{ background-color: {COR_FUNDO}; }}
 
-        /* Sidebar */
         section[data-testid="stSidebar"] {{
             background: #FFFFFF;
             border-right: 1px solid {COR_BORDA};
@@ -88,7 +86,6 @@ def inject_theme():
             box-shadow: 0 2px 8px rgba(200, 162, 124, 0.30);
         }}
 
-        /* Botões gerais */
         .stButton > button {{
             border-radius: 12px;
             font-weight: 700;
@@ -96,7 +93,6 @@ def inject_theme():
             transition: all 0.15s ease;
         }}
 
-        /* Banner de boas-vindas */
         .welcome-banner {{
             background: linear-gradient(120deg, {COR_MARCA} 0%, #D9B894 100%);
             border-radius: 20px;
@@ -127,7 +123,6 @@ def inject_theme():
             font-size: 0.95rem;
         }}
 
-        /* Cards de métrica */
         .metric-card {{
             background: #FFFFFF;
             border-radius: 16px;
@@ -155,7 +150,6 @@ def inject_theme():
             letter-spacing: 0.4px;
         }}
 
-        /* Página de lição */
         .topic-header-tag {{
             color: {COR_MARCA_ESCURA};
             font-weight: 800;
@@ -237,7 +231,6 @@ def inject_theme():
             font-weight: 800;
         }}
 
-        /* Cards de exercício */
         .ex-card-correct {{
             background-color: #F3F8F1;
             border: 1px solid #CFE3C8;
@@ -263,7 +256,6 @@ def inject_theme():
             font-size: 15px;
         }}
 
-        /* Login */
         .login-hero h1 {{
             font-family: 'Fraunces', serif;
             color: {COR_MARCA_ESCURA};
@@ -304,6 +296,23 @@ def inject_theme():
             color: {COR_MARCA_ESCURA};
             font-weight: 800;
             text-decoration: none;
+        }}
+        .divider-ou {{
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 1.2rem 0;
+            color: {COR_TEXTO_SUAVE};
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }}
+        .divider-ou::before, .divider-ou::after {{
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: {COR_BORDA};
         }}
     </style>
     """, unsafe_allow_html=True)
@@ -359,6 +368,7 @@ def buscar_usuarios():
                     "senha": str(reg.get("senha", "")).strip(),
                     "nome": str(reg.get("nome", "")).strip(),
                     "ativo": str(reg.get("ativo", "SIM")).strip().upper(),
+                    "email": str(reg.get("email", "")).strip().lower(),
                     "niveis": {
                         "A1": str(reg.get("A1", "NAO")).strip().upper(),
                         "A2": str(reg.get("A2", "NAO")).strip().upper(),
@@ -439,7 +449,28 @@ if "autenticado" not in st.session_state:
     st.session_state.pagina_atual = "dashboard"
     st.session_state.topico_selecionado = None
 
-def realizar_login(usuario_input, senha_input):
+def autenticar_por_email(email):
+    """Busca o aluno pelo e-mail Google na planilha."""
+    usuarios = buscar_usuarios()
+    email_key = email.strip().lower()
+
+    # Procura primeiro na coluna 'email', depois na coluna 'usuario'
+    for chave, dados in usuarios.items():
+        if dados.get("email") == email_key or chave == email_key:
+            if dados["ativo"] != "SIM":
+                return None, "inativo"
+            return dados, "ok"
+
+    return None, "nao_encontrado"
+
+def iniciar_sessao(dados, identificador):
+    st.session_state.autenticado = True
+    st.session_state.usuario = identificador
+    st.session_state.nome = dados["nome"]
+    st.session_state.niveis = dados["niveis"]
+    st.session_state.pagina_atual = "dashboard"
+
+def realizar_login_senha(usuario_input, senha_input):
     usuarios = buscar_usuarios()
     usr_key = usuario_input.strip().lower()
 
@@ -448,26 +479,60 @@ def realizar_login(usuario_input, senha_input):
         if dados["ativo"] != "SIM":
             st.error("Conta inativa. Fale com a professora para liberar o acesso.")
         elif dados["senha"] == senha_input.strip():
-            st.session_state.autenticado = True
-            st.session_state.usuario = usr_key
-            st.session_state.nome = dados["nome"]
-            st.session_state.niveis = dados["niveis"]
-            st.session_state.pagina_atual = "dashboard"
+            iniciar_sessao(dados, usr_key)
             st.rerun()
         else:
             st.error("Senha incorreta. Tente novamente.")
     else:
-        st.error("E-mail não encontrado. Confira ou fale com a professora.")
+        st.error("Usuário não encontrado. Confira ou fale com a professora.")
 
 def realizar_logout():
     st.session_state.autenticado = False
     st.session_state.usuario = None
     st.session_state.nome = None
     st.session_state.niveis = {}
+    # Se estiver logado via Google, encerra também a sessão OIDC
+    try:
+        if st.user.is_logged_in:
+            st.logout()
+    except Exception:
+        pass
     st.rerun()
 
 # ======================= TELA DE LOGIN =======================
 if not st.session_state.autenticado:
+
+    # Verifica se o Google está configurado nos secrets
+    google_configurado = False
+    try:
+        google_configurado = "auth" in st.secrets
+    except Exception:
+        google_configurado = False
+
+    # Se o usuário está logado no Google, valida o e-mail na planilha
+    if google_configurado:
+        try:
+            if st.user.is_logged_in:
+                dados_aluno, status = autenticar_por_email(st.user.email)
+
+                if status == "ok":
+                    iniciar_sessao(dados_aluno, st.user.email.lower())
+                    st.rerun()
+                elif status == "inativo":
+                    st.error(f"A conta **{st.user.email}** está inativa.")
+                    st.caption("Fale com a professora para liberar o acesso.")
+                    if st.button("Sair da conta Google"):
+                        st.logout()
+                    st.stop()
+                else:
+                    st.error(f"A conta **{st.user.email}** não está cadastrada.")
+                    st.caption("Fale com a professora para solicitar seu acesso.")
+                    if st.button("Sair da conta Google"):
+                        st.logout()
+                    st.stop()
+        except Exception:
+            pass
+
     st.markdown(f"<style>.stApp {{ background: {COR_FUNDO}; }}</style>", unsafe_allow_html=True)
     st.markdown("<div style='height: 6vh'></div>", unsafe_allow_html=True)
 
@@ -492,12 +557,20 @@ if not st.session_state.autenticado:
         st.markdown("<div style='height: 6vh'></div>", unsafe_allow_html=True)
         with st.container(border=True):
             st.markdown(f"<h3 style='margin-bottom:0.2rem; font-family:Fraunces,serif; color:{COR_TEXTO};'>Entrar na sua conta</h3>", unsafe_allow_html=True)
-            st.markdown(f"<p style='color:{COR_TEXTO_SUAVE}; font-size:0.9rem; margin-bottom:1rem;'>Use o acesso enviado pela professora.</p>", unsafe_allow_html=True)
+            st.markdown(f"<p style='color:{COR_TEXTO_SUAVE}; font-size:0.9rem; margin-bottom:1rem;'>Use a conta Google cadastrada pela professora.</p>", unsafe_allow_html=True)
 
+            # --- Botão Google ---
+            if google_configurado:
+                if st.button("Continuar com Google", type="primary", use_container_width=True):
+                    st.login("google")
+
+                st.markdown('<div class="divider-ou">ou</div>', unsafe_allow_html=True)
+
+            # --- Formulário de senha (fallback) ---
             with st.form("login_form", clear_on_submit=False):
-                usuario_input = st.text_input("E-mail ou usuário", placeholder="seu@email.com", autocomplete="off")
+                usuario_input = st.text_input("Usuário", placeholder="seu usuário", autocomplete="off")
                 senha_input = st.text_input("Senha", type="password", placeholder="Sua senha", autocomplete="off")
-                btn_entrar = st.form_submit_button("Entrar", type="primary", use_container_width=True)
+                btn_entrar = st.form_submit_button("Entrar com senha", use_container_width=True)
 
             st.markdown(f"""
                 <p class="login-footer">
@@ -508,9 +581,9 @@ if not st.session_state.autenticado:
 
         if btn_entrar:
             if not usuario_input or not senha_input:
-                st.warning("Preencha o e-mail e a senha.")
+                st.warning("Preencha o usuário e a senha.")
             else:
-                realizar_login(usuario_input, senha_input)
+                realizar_login_senha(usuario_input, senha_input)
 
     st.stop()
 
@@ -562,7 +635,6 @@ with st.sidebar:
         st.session_state.topico_selecionado = None
         st.rerun()
 
-    # Logout fixo no rodapé
     st.markdown(f'<div style="margin-top:auto; padding-top:1rem; border-top:1px solid {COR_BORDA};"></div>', unsafe_allow_html=True)
     if st.button("Sair", use_container_width=True, type="secondary"):
         realizar_logout()
@@ -680,7 +752,6 @@ elif pagina == "skills":
         }
     }
 
-    # ================= VISUALIZAÇÃO DA LIÇÃO / TÓPICO =================
     if st.session_state.get("topico_selecionado"):
         topico = st.session_state.topico_selecionado
 
@@ -705,7 +776,6 @@ elif pagina == "skills":
             </div>
         """, unsafe_allow_html=True)
 
-        # A IDEIA
         st.markdown('<div class="section-tag">A IDEIA</div>', unsafe_allow_html=True)
         st.markdown(f"""
             <div class="info-box-light">
@@ -715,7 +785,6 @@ elif pagina == "skills":
             </div>
         """, unsafe_allow_html=True)
 
-        # ESTRUTURA
         st.markdown('<div class="section-tag">ESTRUTURA</div>', unsafe_allow_html=True)
         st.markdown("""
             <div class="info-box-light">
@@ -726,7 +795,6 @@ elif pagina == "skills":
             </div>
         """, unsafe_allow_html=True)
 
-        # EXEMPLOS
         st.markdown('<div class="section-tag">EXEMPLOS</div>', unsafe_allow_html=True)
         st.caption("Toque na frase para ver a tradução")
         ex1, ex2 = st.columns(2)
@@ -737,7 +805,6 @@ elif pagina == "skills":
             st.info("My best friend **is** from Curitiba.  \n*(O meu melhor amigo é de Curitiba.)*")
             st.info("**Is** your mom a teacher? – Yes, she **is**.  \n*(A tua mãe é professora? – Sim, é.)*")
 
-        # DICAS E ERROS COMUNS
         col_dicas, col_erros = st.columns(2)
         with col_dicas:
             st.markdown('<div class="section-tag">DICAS</div>', unsafe_allow_html=True)
@@ -757,7 +824,6 @@ elif pagina == "skills":
                 </div>
             """, unsafe_allow_html=True)
 
-        # ================= SEÇÃO PRATIQUE =================
         st.markdown('<div class="section-tag">PRATIQUE</div>', unsafe_allow_html=True)
         st.markdown("### Exercícios interativos")
         st.caption("Clique nas opções abaixo ou preencha os campos para conferir.")
@@ -770,7 +836,6 @@ elif pagina == "skills":
         st.progress(acertos_atuais / 5)
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # --- QUESTÃO 1 ---
         status_q1 = st.session_state.respostas_submetidas.get("q1", None)
         if status_q1 == "correto":
             st.markdown('<div class="ex-card-correct">1. My friends ___ very funny.<br><br>✅ <b>Isso!</b> A resposta é <b>are</b>. <i>My friends</i> = they → are.</div>', unsafe_allow_html=True)
@@ -793,7 +858,6 @@ elif pagina == "skills":
                     atualizar_progresso_no_sheets(st.session_state.usuario, xp_add=10, gems_add=2)
                     st.rerun()
 
-        # --- QUESTÃO 2 ---
         status_q2 = st.session_state.respostas_submetidas.get("q2", None)
         if status_q2 == "correto":
             st.markdown('<div class="ex-card-correct">2. ___ you hungry?<br><br>✅ <b>Isso!</b> Pergunta com <i>you</i> → Are.</div>', unsafe_allow_html=True)
